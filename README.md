@@ -1,6 +1,6 @@
 # MemChess
 
-MemChess is an interesting combination of the games [Memory](https://en.wikipedia.org/wiki/Concentration_(card_game)) and [Chess](https://en.wikipedia.org/wiki/Chess).
+MemChess is an interesting combination of the games [Memory](<https://en.wikipedia.org/wiki/Concentration_(card_game)>) and [Chess](https://en.wikipedia.org/wiki/Chess).
 
 It is a small project I took up to learn about websockets using [Socket.IO](https://socket.io/) in [Rust](https://www.rust-lang.org/)
 
@@ -8,16 +8,13 @@ It is a small project I took up to learn about websockets using [Socket.IO](http
 
 - Memchess is a turn based game between two players.
 
-- Two boards are visible on the screen, a memory board and a chess board. 
+- Two boards are visible on the screen, a memory board and a chess board.
 
-- The chess board represents a normal chess game. 
-  
-  - The memory board consists of pairs of tiles representing various chess pieces on the board like the Black Knight, the White Bishop and so on. 
-  
-  - The memory board contains a total of 64 tiles. 
-  
+- The chess board represents a normal chess game.
+
+  - The memory board consists of pairs of tiles representing various chess pieces on the board like the Black Knight, the White Bishop and so on.
+  - The memory board contains a total of 64 tiles.
   - All pieces except the Kings have 2 matching tiles on the memory board.
-  
   - The remaining 4 tiles are wildcards which can be matched with any card
 
 - During each turn, the player can make 1 move on the memory board, which means being able to flip two tiles, and 1 move on the chess board.
@@ -33,25 +30,23 @@ It is a small project I took up to learn about websockets using [Socket.IO](http
 - In case of draw, The player who has a higher score on the memory board wins.
 
 - Notes:
-  
+
   - You can match your own pieces on the memory board but it won't add to your score, however it will delete the piece from the board.
-  
-  ## About the project
-  
-  This project uses a React app via Vite, written in TypeScript, to serve as the frontend. It is hosted on Vercel.
-  
-  The backend for the project is a Socket.IO server written in Rust using Socketioxide and axum
-  
-  ## Dependencies
-  
-  TODO
-  
-  ## Installation
-  
-  TODO
-  
-  ## Usage
-  
-  TODO
-  
-  
+
+## About the project
+
+This project uses a React app via Vite, written in TypeScript, to serve as the frontend. It is hosted on Vercel.
+
+The backend for the project is a Socket.IO server written in Rust using Socketioxide and axum
+
+## Dependencies
+
+TODO
+
+## Installation
+
+TODO
+
+## Usage
+
+TODO
