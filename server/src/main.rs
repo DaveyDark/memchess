@@ -1,25 +1,27 @@
-use axum::{serve, Router};
+use axum::Router;
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
-use serde_json::{json, Value};
+use serde_json::json;
 use socketioxide::{
     extract::{Data, SocketRef},
     SocketIo,
 };
-use tokio::net::TcpListener;
 use tower::ServiceBuilder;
 use tower_http::cors::CorsLayer;
 use tracing::{error, info};
-use tracing_subscriber::FmtSubscriber;
 
 #[derive(serde::Deserialize)]
 struct RoomID {
     room_id: String,
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    tracing::subscriber::set_global_default(FmtSubscriber::default())?;
+struct Room {
+    id: String,
+}
 
+#[shuttle_runtime::main]
+pub async fn axum(
+    #[shuttle_secrets::Secrets] secrets: shuttle_secrets::SecretStore,
+) -> shuttle_axum::ShuttleAxum {
     let (layer, io) = SocketIo::new_layer();
     io.ns("/", on_connect);
 
@@ -28,13 +30,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .layer(CorsLayer::permissive())
             .layer(layer),
     );
-    let listener = TcpListener::bind("0.0.0.0:3000").await?;
 
     info!("Starting server");
 
-    serve(listener, app).await?;
-
-    Ok(())
+    Ok(app.into())
 }
 
 async fn on_connect(socket: SocketRef) {
@@ -44,7 +43,7 @@ async fn on_connect(socket: SocketRef) {
         info!("Received message: {:?}", data);
     });
 
-    socket.on("create_room", move |socket: SocketRef, Data::<Value>(_)| {
+    socket.on("create_room", move |socket: SocketRef| {
         // Generate a random room ID
         info!("Creating room for player {}", socket.id);
         let room_id: String = thread_rng()
