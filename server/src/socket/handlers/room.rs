@@ -9,11 +9,19 @@ use crate::{
 };
 
 pub async fn on_create_room(socket: SocketRef, state: State<SocketState>) {
-    // Disconnect from any previous rooms
-    socket.leave_all().unwrap_or_else(|e| {
-        error!("Error leaving all rooms: {:?}", e);
-        return;
-    });
+    // Check if player is already in a room
+    let room_id = get_data_from_extension(&socket)[1].clone();
+    if room_id != "" {
+        // Disconnect player from existing room
+        if let Some(mut room) = state.get(room_id.clone()).await {
+            room.disconnect_player(socket.id.to_string());
+            if room.is_empty() {
+                state.remove(room_id.clone()).await;
+            } else {
+                state.update(room_id.clone(), room).await;
+            }
+        }
+    }
 
     // Generate a random room ID
     info!("Creating room for player {}", socket.id);
@@ -55,6 +63,20 @@ pub async fn on_join_room(
     Data::<String>(room_id): Data<String>,
     state: State<SocketState>,
 ) {
+    // Check if player is already in a room
+    let room_id = get_data_from_extension(&socket)[1].clone();
+    if room_id != "" {
+        // Disconnect player from existing room
+        if let Some(mut room) = state.get(room_id.clone()).await {
+            room.disconnect_player(socket.id.to_string());
+            if room.is_empty() {
+                state.remove(room_id.clone()).await;
+            } else {
+                state.update(room_id.clone(), room).await;
+            }
+        }
+    }
+
     // Check if the room exists and has only one player
     info!("Player {} is trying to join room {}", socket.id, room_id);
     if socket.within(room_id.clone()).sockets().unwrap().len() == 1 {

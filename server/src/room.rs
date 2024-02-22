@@ -1,3 +1,5 @@
+use tracing::error;
+
 use crate::memory::board::MemoryBoard;
 
 #[derive(Debug, Clone)]
@@ -29,8 +31,16 @@ impl Room {
         // Add player p to the room
         self.p2 = p.clone();
     }
-    pub fn start_game(&mut self) {
+    pub fn start_game(&mut self, _p: String) {
         // Adds the second player to the room and starts the game
+        if _p != self.p1 && _p != self.p2 {
+            error!(
+                "Invalid start game event;\n Player {} is not in the room",
+                _p
+            );
+            return;
+        }
+        self.turn = _p;
         self.playing = true;
     }
     pub fn disconnect_player(&mut self, p: String) {
@@ -58,5 +68,9 @@ impl Room {
     pub fn is_empty(&self) -> bool {
         // Returns true if the room is empty
         self.p1 == "" && self.p2 == ""
+    }
+    pub fn get_turn(&self) -> String {
+        // Returns the player whose turn it is
+        self.turn.clone()
     }
 }
