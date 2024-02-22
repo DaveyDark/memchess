@@ -13,6 +13,7 @@ impl MemoryBoard {
         // x is a wildcard, w is white, b is black
         // q is queen, r is rook, b is bishop, n is knight, p is pawn
         // small letters represent first tile and capital letters represent it's matching second tile
+        // _ at the end means the tile has been flipped
         const TILES: [&str; 64] = [
             "x", "bq", "br", "br", "bb", "bb", "bn", "bn", "bp", "bp", "bp", "bp", "bp", "bp",
             "bp", "bp", "x", "wq", "wr", "wr", "wb", "wb", "wn", "wn", "wp", "wp", "wp", "wp",
@@ -33,12 +34,16 @@ impl MemoryBoard {
             board: game_board.into_iter().map(|s| s.to_string()).collect(),
         }
     }
+
     pub fn from_serialized(serialized: String) -> Self {
+        // Returns a new board constructed from a serialized string
         Self {
             board: serialized.split(',').map(|s| s.to_string()).collect(),
         }
     }
+
     pub fn serialize(&self) -> String {
+        // Serializes the board into a string to make it easier to transmit over sockets
         self.board.join(",")
     }
 }
