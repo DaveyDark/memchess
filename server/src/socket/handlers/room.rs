@@ -84,3 +84,25 @@ pub fn on_join_room(
             })
     }
 }
+
+pub fn on_leave_room(socket: SocketRef, state: State<SocketState>) {
+    let room_id = get_data_from_extension(&socket)[1].clone();
+    if let Some(mut room) = state.get(room_id.clone()) {
+        // Disconnect the player from the room
+        socket
+            .to(room_id.clone())
+            .emit("opponent_disconnected", ())
+            .unwrap_or_else(|e| {
+                error!("Error sending disconnection event: {:?}", e);
+            });
+        room.disconnect_player(socket.id.to_string());
+        if room.is_empty() {
+            // If the room is empty, remove it from the state
+            state.remove(room_id.clone());
+        } else {
+            // Otherwise, update the state with the new room data
+            state.update(room_id.clone(), room);
+        }
+    }
+    info!("Player {} left room {}", socket.id, room_id);
+}

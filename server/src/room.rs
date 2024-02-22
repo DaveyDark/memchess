@@ -55,4 +55,8 @@ impl Room {
         // Returns true if the game is currently being played
         self.playing
     }
+    pub fn is_empty(&self) -> bool {
+        // Returns true if the room is empty
+        self.p1 == "" && self.p2 == ""
+    }
 }
