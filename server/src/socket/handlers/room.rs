@@ -8,7 +8,7 @@ use crate::{
     util::{format_extension, get_data_from_extension},
 };
 
-pub fn on_create_room(socket: SocketRef, state: State<SocketState>) {
+pub async fn on_create_room(socket: SocketRef, state: State<SocketState>) {
     // Disconnect from any previous rooms
     socket.leave_all().unwrap_or_else(|e| {
         error!("Error leaving all rooms: {:?}", e);
@@ -45,12 +45,12 @@ pub fn on_create_room(socket: SocketRef, state: State<SocketState>) {
     // Create a new room in the state
     let new_room = Room::new(socket.id.clone().to_string());
     info!("Created room {:?}", new_room.clone());
-    state.add(room_id.clone(), new_room);
+    state.add(room_id.clone(), new_room).await;
 
     info!("{} created and joined room {}", socket.id, room_id);
 }
 
-pub fn on_join_room(
+pub async fn on_join_room(
     socket: SocketRef,
     Data::<String>(room_id): Data<String>,
     state: State<SocketState>,
@@ -64,9 +64,12 @@ pub fn on_join_room(
             return;
         });
         // Update the state to add the second player to the room
-        let mut room = state.get(room_id.clone()).expect("Expected room to exist");
+        let mut room = state
+            .get(room_id.clone())
+            .await
+            .expect("Expected room to exist");
         room.connect_player(socket.id.to_string());
-        state.update(room_id.clone(), room);
+        state.update(room_id.clone(), room).await;
 
         // Insert the room ID into the socket extensions for easy access
         let mut ext_data = get_data_from_extension(&socket);
@@ -85,9 +88,9 @@ pub fn on_join_room(
     }
 }
 
-pub fn on_leave_room(socket: SocketRef, state: State<SocketState>) {
+pub async fn on_leave_room(socket: SocketRef, state: State<SocketState>) {
     let room_id = get_data_from_extension(&socket)[1].clone();
-    if let Some(mut room) = state.get(room_id.clone()) {
+    if let Some(mut room) = state.get(room_id.clone()).await {
         // Disconnect the player from the room
         socket
             .to(room_id.clone())
@@ -98,10 +101,10 @@ pub fn on_leave_room(socket: SocketRef, state: State<SocketState>) {
         room.disconnect_player(socket.id.to_string());
         if room.is_empty() {
             // If the room is empty, remove it from the state
-            state.remove(room_id.clone());
+            state.remove(room_id.clone()).await;
         } else {
             // Otherwise, update the state with the new room data
-            state.update(room_id.clone(), room);
+            state.update(room_id.clone(), room).await;
         }
     }
     info!("Player {} left room {}", socket.id, room_id);

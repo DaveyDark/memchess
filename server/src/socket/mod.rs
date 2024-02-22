@@ -35,9 +35,9 @@ pub fn on_connect(socket: SocketRef) {
     socket.on_disconnect(on_disconnect)
 }
 
-pub fn on_disconnect(socket: SocketRef, state: State<SocketState>) {
+pub async fn on_disconnect(socket: SocketRef, state: State<SocketState>) {
     let room_id = get_data_from_extension(&socket)[1].clone();
-    if let Some(mut room) = state.get(room_id.clone()) {
+    if let Some(mut room) = state.get(room_id.clone()).await {
         // Disconnect the player from the room
         socket
             .to(room_id.clone())
@@ -48,10 +48,10 @@ pub fn on_disconnect(socket: SocketRef, state: State<SocketState>) {
         room.disconnect_player(socket.id.to_string());
         if room.is_empty() {
             // If the room is empty, remove it from the state
-            state.remove(room_id.clone());
+            state.remove(room_id.clone()).await;
         } else {
             // Otherwise, update the state with the new room data
-            state.update(room_id.clone(), room);
+            state.update(room_id.clone(), room).await;
         }
     }
     info!("Player {} disconnected", socket.id);

@@ -12,9 +12,9 @@ pub fn on_message(socket: SocketRef, Data::<String>(data): Data<String>) {
     );
 }
 
-pub fn on_rooms(socket: SocketRef, state: State<SocketState>) {
+pub async fn on_rooms(socket: SocketRef, state: State<SocketState>) {
     socket
-        .emit("rooms", format!("{:?}", state.get_all()))
+        .emit("rooms", format!("{:?}", state.get_all().await))
         .unwrap_or_else(|e| {
             error!("Error sending rooms event: {:?}", e);
         });

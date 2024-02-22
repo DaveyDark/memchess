@@ -1,77 +1,46 @@
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
 
-use tracing::error;
+use tokio::sync::RwLock;
 
 use crate::room::Room;
 
 pub struct SocketState {
     // Main state of the app
     // Stores Room objects for each active room
-    // Arc<Mutex>> ensures safe concurrent mutability and access across threads
-    rooms: Arc<Mutex<HashMap<String, Room>>>,
+    // RwLock ensures safe concurrent mutability and access across threads
+    rooms: RwLock<HashMap<String, Room>>,
 }
 
 impl SocketState {
     pub fn new() -> Self {
         // Returns a new empty SocketState
         Self {
-            rooms: Arc::new(Mutex::new(HashMap::new())),
+            rooms: RwLock::new(HashMap::new()),
         }
     }
-    pub fn add(&self, room_id: String, room: Room) {
+    pub async fn add(&self, room_id: String, room: Room) {
         // Adds a new Room to the state with a given room_id
-        let mut map = self
-            .rooms
-            .lock()
-            .map_err(|e| {
-                error!("Error locking mutex: {:?}", e);
-            })
-            .unwrap();
+        let mut map = self.rooms.write().await;
         map.insert(room_id, room);
     }
-    pub fn update(&self, room_id: String, room: Room) {
+    pub async fn update(&self, room_id: String, room: Room) {
         // Updates a Room in the state with a given room_id
-        let mut map = self
-            .rooms
-            .lock()
-            .map_err(|e| {
-                error!("Error locking mutex: {:?}", e);
-            })
-            .unwrap();
+        let mut map = self.rooms.write().await;
         map.insert(room_id, room);
     }
-    pub fn remove(&self, room_id: String) {
+    pub async fn remove(&self, room_id: String) {
         // Removes a Room from the state with a given room_id
-        let mut map = self
-            .rooms
-            .lock()
-            .map_err(|e| {
-                error!("Error locking mutex: {:?}", e);
-            })
-            .unwrap();
+        let mut map = self.rooms.write().await;
         map.remove(&room_id);
     }
-    pub fn get(&self, room_id: String) -> Option<Room> {
+    pub async fn get(&self, room_id: String) -> Option<Room> {
         // Returns a clone of the Room with a given room_id
-        let map = self
-            .rooms
-            .lock()
-            .map_err(|e| {
-                error!("Error locking mutex: {:?}", e);
-            })
-            .unwrap();
+        let map = self.rooms.read().await;
         map.get(&room_id).cloned()
     }
-    pub fn get_all(&self) -> Vec<Room> {
+    pub async fn get_all(&self) -> Vec<Room> {
         // Clones and returns all the Rooms in the state
-        let map = self
-            .rooms
-            .lock()
-            .map_err(|e| {
-                error!("Error locking mutex: {:?}", e);
-            })
-            .unwrap();
+        let map = self.rooms.read().await;
         map.values().cloned().collect()
     }
 }

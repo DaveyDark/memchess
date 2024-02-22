@@ -3,12 +3,12 @@ use tracing::error;
 
 use crate::{socket::state::SocketState, util::get_data_from_extension};
 
-pub fn on_start_game(socket: SocketRef, state: State<SocketState>) {
+pub async fn on_start_game(socket: SocketRef, state: State<SocketState>) {
     // Start the game
     let room_id = get_data_from_extension(&socket)[1].clone();
-    if let Some(mut room) = state.get(room_id.clone()) {
+    if let Some(mut room) = state.get(room_id.clone()).await {
         room.start_game();
-        state.update(room_id.clone(), room);
+        state.update(room_id.clone(), room).await;
         socket
             .within(room_id.clone())
             .emit("game_started", ())
@@ -23,12 +23,12 @@ pub fn on_start_game(socket: SocketRef, state: State<SocketState>) {
     }
 }
 
-pub fn on_reset_game(socket: SocketRef, state: State<SocketState>) {
+pub async fn on_reset_game(socket: SocketRef, state: State<SocketState>) {
     // Reset the game state
     let room_id = get_data_from_extension(&socket)[1].clone();
-    if let Some(mut room) = state.get(room_id.clone()) {
+    if let Some(mut room) = state.get(room_id.clone()).await {
         room.reset_game();
-        state.update(room_id.clone(), room);
+        state.update(room_id.clone(), room).await;
         socket
             .within(room_id.clone())
             .emit("game_reset", ())
