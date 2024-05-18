@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use serde::{Deserialize, Serialize};
 use tracing::error;
 
@@ -77,5 +79,13 @@ impl Room {
     pub fn get_mut_memory_board(&mut self) -> &mut MemoryBoard {
         // Returns a mutable reference to the memory board
         &mut self.memory_board
+    }
+    pub fn get_chess_board(&self) -> Result<chess::Board, chess::Error> {
+        // Returns the chess board as a string
+        chess::Board::from_str(&self.chess_fen)
+    }
+    pub fn set_chess_board(&mut self, board: chess::Board) {
+        // Sets the chess board from a string
+        self.chess_fen = board.to_string();
     }
 }

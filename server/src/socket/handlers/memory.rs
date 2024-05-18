@@ -16,12 +16,13 @@ pub async fn on_flip_tile(
             return;
         }
         let board = room.get_mut_memory_board();
-        board.flip_tile(index);
-        // Tell the opponent that tile is flipped
-        socket
-            .to(room_id.clone())
-            .emit("tile_flipped", index)
-            .unwrap_or_else(|e| error!("Failed to emit tile_flipped event: {}", e));
+        if board.flip_tile(index) {
+            // Tell the opponent that tile is flipped
+            socket
+                .to(room_id.clone())
+                .emit("tile_flipped", index)
+                .unwrap_or_else(|e| error!("Failed to emit tile_flipped event: {}", e));
+        }
     }
 }
 
