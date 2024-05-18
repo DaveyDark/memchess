@@ -63,7 +63,9 @@ impl MemoryBoard {
         if self.flips.len() != 2 {
             return false;
         }
-        if self.board[self.flips[0]] == self.board[self.flips[1]] {
+        if self.board[self.flips[0]].to_ascii_lowercase()
+            == self.board[self.flips[1]].to_ascii_lowercase()
+        {
             // If the last 2 flipped tiles match, return true and remove them
             self.board[self.flips[0]] = String::new();
             self.board[self.flips[1]] = String::new();
@@ -75,6 +77,15 @@ impl MemoryBoard {
             self.board[self.flips[1]].pop();
             self.flips.clear();
             false
+        }
+    }
+
+    pub fn remove_tiles(&mut self, piece: String) {
+        // Removes all tiles with the given piece
+        for tile in self.board.iter_mut() {
+            if tile.to_ascii_lowercase().trim_matches('_') == &piece {
+                *tile = String::new();
+            }
         }
     }
 

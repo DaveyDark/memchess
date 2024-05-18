@@ -23,7 +23,7 @@ impl Room {
         Self {
             p1: p1.clone(),
             p2: String::new(),
-            chess_fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1".to_string(),
+            chess_fen: chess::Board::default().to_string(),
             memory_board: MemoryBoard::new(),
             turn: p1.to_string(),
             turn_count: 0,
@@ -58,7 +58,7 @@ impl Room {
     }
     pub fn reset_game(&mut self) {
         // Reset the game to it's initial state
-        self.chess_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1".to_string();
+        self.chess_fen = chess::Board::default().to_string();
         self.memory_board = MemoryBoard::new();
         self.turn = self.p1.to_string();
         self.turn_count = 0;
@@ -80,6 +80,14 @@ impl Room {
         // Returns a mutable reference to the memory board
         &mut self.memory_board
     }
+    pub fn get_memory_board(&self) -> MemoryBoard {
+        // Returns the memory board
+        self.memory_board.clone()
+    }
+    pub fn set_memory_board(&mut self, board: MemoryBoard) {
+        // Sets the memory board
+        self.memory_board = board;
+    }
     pub fn get_chess_board(&self) -> Result<chess::Board, chess::Error> {
         // Returns the chess board as a string
         chess::Board::from_str(&self.chess_fen)
@@ -87,5 +95,9 @@ impl Room {
     pub fn set_chess_board(&mut self, board: chess::Board) {
         // Sets the chess board from a string
         self.chess_fen = board.to_string();
+    }
+    pub fn end_game(&mut self) {
+        // Ends the game
+        self.playing = false;
     }
 }
