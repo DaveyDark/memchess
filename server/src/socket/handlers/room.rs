@@ -1,4 +1,5 @@
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
+use serde_json::json;
 use socketioxide::extract::{Data, SocketRef, State};
 use tracing::{error, info};
 
@@ -64,15 +65,15 @@ pub async fn on_join_room(
     state: State<SocketState>,
 ) {
     // Check if player is already in a room
-    let room_id = get_data_from_extension(&socket)[1].clone();
-    if room_id != "" {
+    let rid = get_data_from_extension(&socket)[1].clone();
+    if rid != "" {
         // Disconnect player from existing room
-        if let Some(mut room) = state.get(room_id.clone()).await {
+        if let Some(mut room) = state.get(rid.clone()).await {
             room.disconnect_player(socket.id.to_string());
             if room.is_empty() {
-                state.remove(room_id.clone()).await;
+                state.remove(rid.clone()).await;
             } else {
-                state.update(room_id.clone(), room).await;
+                state.update(rid.clone(), room).await;
             }
         }
     }
@@ -130,4 +131,18 @@ pub async fn on_leave_room(socket: SocketRef, state: State<SocketState>) {
         }
     }
     info!("Player {} left room {}", socket.id, room_id);
+}
+
+pub async fn on_room_info(socket: SocketRef, state: State<SocketState>) {
+    let room_id = get_data_from_extension(&socket)[1].clone();
+    if let Some(room) = state.get(room_id.clone()).await {
+        // Send the room info to the client
+        socket
+            .emit("room_info", json!(room))
+            .unwrap_or_else(|e| error!("Error sending room_info event: {:?}", e));
+    } else {
+        socket
+            .emit("room_info", {})
+            .unwrap_or_else(|e| error!("Error sending room_info event: {:?}", e));
+    }
 }

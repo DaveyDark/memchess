@@ -19,10 +19,15 @@ pub fn on_connect(socket: SocketRef) {
     socket.on("create_room", handlers::room::on_create_room);
     socket.on("join_room", handlers::room::on_join_room);
     socket.on("leave_room", handlers::room::on_leave_room);
+    socket.on("room_info", handlers::room::on_room_info);
 
     // Game Events
     socket.on("start_game", handlers::game::on_start_game);
     socket.on("reset_game", handlers::game::on_reset_game);
+
+    // Memory Game Events
+    socket.on("flip_tile", handlers::memory::on_flip_tile);
+    socket.on("match_tiles", handlers::memory::on_match_tiles);
 
     // User Events
     socket.on("set_name", handlers::user::on_set_name);

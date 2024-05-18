@@ -1,14 +1,15 @@
+use serde::{Deserialize, Serialize};
 use tracing::error;
 
 use crate::memory::board::MemoryBoard;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Room {
     // Stores all the information about a room
     p1: String,
     p2: String,
     chess_fen: String,
-    memory_str: String,
+    memory_board: MemoryBoard,
     turn: String,
     turn_count: u32,
     playing: bool,
@@ -21,7 +22,7 @@ impl Room {
             p1: p1.clone(),
             p2: String::new(),
             chess_fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1".to_string(),
-            memory_str: MemoryBoard::new().serialize(),
+            memory_board: MemoryBoard::new(),
             turn: p1.to_string(),
             turn_count: 0,
             playing: false,
@@ -56,7 +57,7 @@ impl Room {
     pub fn reset_game(&mut self) {
         // Reset the game to it's initial state
         self.chess_fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1".to_string();
-        self.memory_str = MemoryBoard::new().serialize();
+        self.memory_board = MemoryBoard::new();
         self.turn = self.p1.to_string();
         self.turn_count = 0;
         self.playing = false;
@@ -72,5 +73,9 @@ impl Room {
     pub fn get_turn(&self) -> String {
         // Returns the player whose turn it is
         self.turn.clone()
+    }
+    pub fn get_mut_memory_board(&mut self) -> &mut MemoryBoard {
+        // Returns a mutable reference to the memory board
+        &mut self.memory_board
     }
 }

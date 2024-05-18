@@ -18,6 +18,7 @@ pub async fn on_start_game(socket: SocketRef, state: State<SocketState>) {
         socket
             .emit("turn", {})
             .unwrap_or_else(|e| error!("Error sending turn event: {:?}", e));
+    } else {
         error!(
             "Received start_game event for non-existent room {}",
             room_id

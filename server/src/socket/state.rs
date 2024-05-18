@@ -8,7 +8,7 @@ pub struct SocketState {
     // Main state of the app
     // Stores Room objects for each active room
     // RwLock ensures safe concurrent mutability and access across threads
-    rooms: RwLock<HashMap<String, Room>>,
+    pub rooms: RwLock<HashMap<String, Room>>,
 }
 
 impl SocketState {
