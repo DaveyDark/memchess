@@ -1,5 +1,4 @@
 use axum::Router;
-use shuttle_runtime::SecretStore;
 use socketioxide::SocketIoBuilder;
 use tower::ServiceBuilder;
 use tower_http::cors::CorsLayer;
@@ -13,7 +12,7 @@ mod socket;
 mod util;
 
 #[shuttle_runtime::main]
-pub async fn axum(#[shuttle_runtime::Secrets] _secrets: SecretStore) -> shuttle_axum::ShuttleAxum {
+pub async fn axum() -> shuttle_axum::ShuttleAxum {
     // State for the socket server
     let rooms = SocketState::new();
 
