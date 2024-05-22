@@ -39,9 +39,17 @@ This project uses a React app via Vite, written in TypeScript, to serve as the f
 
 The backend for the project is a Socket.IO server written in Rust using Socketioxide and axum
 
-## Dependencies
-
-TODO
+## Tech Stack
+- Client (TypeScript + React(Vite))
+  - react-chessboard (Chessboard Component)
+  - socket.io-client (SocketIO Client Events)
+  - chess.js (Move Validation)
+  - Tailwind CSS (Styling)
+  - Daisy UI (Component Library)
+- Server (Rust)
+  - Axum (Web Server)
+  - SocketIOxide (SocketIO Server)
+  - Shuttle (Deployment)
 
 ## Installation
 
