@@ -1,3 +1,4 @@
+pub mod chat;
 pub mod chess;
 pub mod debug;
 pub mod game;

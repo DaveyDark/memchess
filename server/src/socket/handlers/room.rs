@@ -3,15 +3,22 @@ use serde_json::json;
 use socketioxide::extract::{Data, SocketRef, State};
 use tracing::{error, info};
 
-use crate::{
-    room::Room,
-    socket::state::SocketState,
-    util::{format_extension, get_data_from_extension},
-};
+use crate::{room::Room, socket::state::SocketState, util::get_data_from_extension};
 
-pub async fn on_create_room(socket: SocketRef, state: State<SocketState>) {
+// Struct to represent join_room params
+#[derive(Debug, Clone, serde::Deserialize)]
+pub struct JoinRoom {
+    room_id: String,
+    name: String,
+}
+
+pub async fn on_create_room(
+    socket: SocketRef,
+    state: State<SocketState>,
+    Data::<String>(p1_name): Data<String>,
+) {
     // Check if player is already in a room
-    let room_id = get_data_from_extension(&socket)[1].clone();
+    let room_id = get_data_from_extension(&socket);
     if room_id != "" {
         // Disconnect player from existing room
         if let Some(mut room) = state.get(room_id.clone()).await {
@@ -39,20 +46,18 @@ pub async fn on_create_room(socket: SocketRef, state: State<SocketState>) {
     });
 
     // Insert the room ID into the socket extensions for easy access
-    let mut ext_data = get_data_from_extension(&socket);
-    ext_data[1] = room_id.clone();
-    socket.extensions.insert(format_extension(ext_data));
+    socket.extensions.insert(room_id.clone());
 
     // Send the generated room ID back to the client
     socket
-        .emit("room_created", room_id.clone())
+        .emit("room_joined", room_id.clone())
         .unwrap_or_else(|e| {
             error!("Error sending roomCreated event: {:?}", e);
             return;
         });
 
     // Create a new room in the state
-    let new_room = Room::new(socket.id.clone().to_string());
+    let new_room = Room::new(socket.id.clone().to_string(), p1_name);
     info!("Created room {:?}", new_room.clone());
     state.add(room_id.clone(), new_room).await;
 
@@ -61,11 +66,16 @@ pub async fn on_create_room(socket: SocketRef, state: State<SocketState>) {
 
 pub async fn on_join_room(
     socket: SocketRef,
-    Data::<String>(room_id): Data<String>,
+    Data::<JoinRoom>(data): Data<JoinRoom>,
     state: State<SocketState>,
 ) {
     // Check if player is already in a room
-    let rid = get_data_from_extension(&socket)[1].clone();
+    let room_id = data.room_id.clone();
+    let rid = get_data_from_extension(&socket);
+    if rid == room_id {
+        // If the player is already in the room, do nothing
+        return;
+    }
     if rid != "" {
         // Disconnect player from existing room
         if let Some(mut room) = state.get(rid.clone()).await {
@@ -91,19 +101,24 @@ pub async fn on_join_room(
             .get(room_id.clone())
             .await
             .expect("Expected room to exist");
-        room.connect_player(socket.id.to_string());
+        room.connect_player(socket.id.to_string(), data.name);
         state.update(room_id.clone(), room).await;
 
         // Insert the room ID into the socket extensions for easy access
-        let mut ext_data = get_data_from_extension(&socket);
-        ext_data[1] = room_id.clone();
-        socket.extensions.insert(format_extension(ext_data));
+        socket.extensions.insert(room_id.clone());
+
+        socket
+            .emit("room_joined", room_id.clone())
+            .unwrap_or_else(|e| {
+                error!("Error sending room_joined event: {:?}", e);
+                return;
+            });
 
         info!("Player {} joined room {}", socket.id, &room_id);
     } else {
         // Send an error message if the room is full or doesn't exist
         socket
-            .emit("error_message", "Room is full or does not exist")
+            .emit("join_failed", "Room is full or does not exist")
             .unwrap_or_else(|e| {
                 error!("Error sending error_message event: {:?}", e);
                 return;
@@ -112,7 +127,7 @@ pub async fn on_join_room(
 }
 
 pub async fn on_leave_room(socket: SocketRef, state: State<SocketState>) {
-    let room_id = get_data_from_extension(&socket)[1].clone();
+    let room_id = get_data_from_extension(&socket);
     if let Some(mut room) = state.get(room_id.clone()).await {
         // Disconnect the player from the room
         socket
@@ -134,7 +149,7 @@ pub async fn on_leave_room(socket: SocketRef, state: State<SocketState>) {
 }
 
 pub async fn on_room_info(socket: SocketRef, state: State<SocketState>) {
-    let room_id = get_data_from_extension(&socket)[1].clone();
+    let room_id = get_data_from_extension(&socket);
     if let Some(room) = state.get(room_id.clone()).await {
         // Send the room info to the client
         socket

@@ -22,7 +22,6 @@ pub fn on_connect(socket: SocketRef) {
     socket.on("room_info", handlers::room::on_room_info);
 
     // Game Events
-    socket.on("start_game", handlers::game::on_start_game);
     socket.on("reset_game", handlers::game::on_reset_game);
 
     // Memory Game Events
@@ -32,8 +31,11 @@ pub fn on_connect(socket: SocketRef) {
     // Chess Game Events
     socket.on("move_piece", handlers::chess::on_move_piece);
 
+    // Chat Events
+    socket.on("chat", handlers::chat::on_chat);
+
     // User Events
-    socket.on("set_name", handlers::user::on_set_name);
+    socket.on("player_info", handlers::user::on_player_info);
 
     // Debug events
     socket.on("message", handlers::debug::on_message);
@@ -44,7 +46,7 @@ pub fn on_connect(socket: SocketRef) {
 }
 
 pub async fn on_disconnect(socket: SocketRef, state: State<SocketState>) {
-    let room_id = get_data_from_extension(&socket)[1].clone();
+    let room_id = get_data_from_extension(&socket);
     if let Some(mut room) = state.get(room_id.clone()).await {
         // Disconnect the player from the room
         socket

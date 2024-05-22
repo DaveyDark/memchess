@@ -8,7 +8,7 @@ pub async fn on_flip_tile(
     state: State<SocketState>,
     Data::<usize>(index): Data<usize>,
 ) {
-    let room_id = get_data_from_extension(&socket)[1].clone();
+    let room_id = get_data_from_extension(&socket);
     // Get write access to the room
     if let Some(room) = state.rooms.write().await.get_mut(&room_id) {
         if !room.is_playing() {
@@ -27,7 +27,7 @@ pub async fn on_flip_tile(
 }
 
 pub async fn on_match_tiles(socket: SocketRef, state: State<SocketState>) {
-    let room_id = get_data_from_extension(&socket)[1].clone();
+    let room_id = get_data_from_extension(&socket);
     // Get write access to the room
     if let Some(room) = state.rooms.write().await.get_mut(&room_id) {
         if !room.is_playing() {
