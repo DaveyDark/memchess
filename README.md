@@ -50,6 +50,7 @@ The backend for the project is a Socket.IO server written in Rust using Socketio
   - Axum (Web Server)
   - SocketIOxide (SocketIO Server)
   - Shuttle (Deployment)
+  - chess.rs (Move Validation and Board Management)
 
 ## Installation
 
