@@ -1,7 +1,7 @@
 use socketioxide::extract::{Data, SocketRef, State};
 use tracing::error;
 
-use crate::{socket::state::SocketState, util::get_data_from_extension};
+use crate::{room::RoomState, socket::state::SocketState, util::get_data_from_extension};
 
 pub async fn on_flip_tile(
     socket: SocketRef,
@@ -11,7 +11,7 @@ pub async fn on_flip_tile(
     let room_id = get_data_from_extension(&socket);
     // Get write access to the room
     if let Some(room) = state.rooms.write().await.get_mut(&room_id) {
-        if !room.is_playing() {
+        if room.get_state() != RoomState::Playing {
             error!("Received flip_tile event for non-playing room {}", room_id);
             return;
         }
@@ -30,7 +30,7 @@ pub async fn on_match_tiles(socket: SocketRef, state: State<SocketState>) {
     let room_id = get_data_from_extension(&socket);
     // Get write access to the room
     if let Some(room) = state.rooms.write().await.get_mut(&room_id) {
-        if !room.is_playing() {
+        if room.get_state() != RoomState::Playing {
             error!(
                 "Received match_tiles event for non-playing room {}",
                 room_id

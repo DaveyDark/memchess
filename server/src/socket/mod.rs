@@ -56,7 +56,7 @@ pub async fn on_disconnect(socket: SocketRef, state: State<SocketState>) {
                 error!("Error sending disconnection event: {:?}", e);
             });
         room.disconnect_player(socket.id.to_string());
-        if room.is_empty() {
+        if room.player_count() == 0 {
             // If the room is empty, remove it from the state
             state.remove(room_id.clone()).await;
         } else {

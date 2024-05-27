@@ -2,83 +2,122 @@ use std::str::FromStr;
 
 use serde::{Deserialize, Serialize};
 
-use crate::memory::board::MemoryBoard;
+use crate::{memory::board::MemoryBoard, user::User};
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum RoomState {
+    Waiting,
+    Ready,
+    Playing,
+    Paused,
+    Over,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Room {
     // Stores all the information about a room
-    p1: String,
-    p2: String,
-    p1_name: String,
-    p2_name: String,
+    p1: Option<User>,
+    p2: Option<User>,
     chess_fen: String,
     memory_board: MemoryBoard,
     turn: String,
     turn_count: u32,
-    playing: bool,
-    white: String,
-    black: String,
+    state: RoomState,
 }
 
 impl Room {
-    pub fn new(p1: String, p1_name: String) -> Self {
+    pub fn new(p1_id: String, p1_name: String) -> Self {
+        let p1 = User::new(
+            p1_id,
+            p1_name,
+            String::new(),
+            String::new(),
+            String::new(),
+            String::new(),
+        );
+
         // Create a new room with the given id as player 1
         Self {
-            p1: p1.clone(),
-            p2: String::new(),
-            p1_name,
-            p2_name: String::new(),
+            p1: Some(p1),
+            p2: None,
             chess_fen: chess::Board::default().to_string(),
             memory_board: MemoryBoard::new(),
-            turn: p1.to_string(),
+            turn: String::new(),
             turn_count: 0,
-            playing: false,
-            black: String::new(),
-            white: String::new(),
+            state: RoomState::Waiting,
         }
     }
-    pub fn connect_player(&mut self, p: String, name: String) {
+    pub fn connect_player(
+        &mut self,
+        p: String,
+        name: String,
+        avatar: String,
+        avatar_orientation: String,
+        avatar_color: String,
+    ) {
         // Add player p to the room
-        self.p2 = p.clone();
-        self.p2_name = name;
+        self.p2 = Some(User::new(
+            p,
+            name,
+            avatar,
+            avatar_orientation,
+            avatar_color,
+            String::new(),
+        ));
     }
     pub fn start_game(&mut self, _p: String) {
         // Starts game with player _p
-        self.playing = true;
-        if self.p1 == _p {
-            self.white = self.p1.clone();
-            self.black = self.p2.clone();
+        self.state = RoomState::Playing;
+        if self.p1.is_none() || self.p2.is_none() {
+            return;
+        }
+        let p1 = self.p1.as_mut().unwrap();
+        let p2 = self.p2.as_mut().unwrap();
+        if p1.get_id() == _p {
+            p1.set_chess_color("white".to_string());
+            p2.set_chess_color("black".to_string());
         } else {
-            self.white = self.p2.clone();
-            self.black = self.p1.clone();
+            p1.set_chess_color("black".to_string());
+            p2.set_chess_color("white".to_string());
         }
         self.turn = _p;
     }
     pub fn disconnect_player(&mut self, p: String) {
         // Remove player p from the room
-        if p == self.p1 {
-            self.p1 = self.p2.clone();
+        if p == self.p1.as_ref().unwrap().get_id() {
+            self.p1 = None;
+        } else {
+            self.p2 = None;
         }
-        self.p2 = String::new();
-
         // Stop game
-        self.playing = false;
+        if self.state == RoomState::Playing {
+            self.state = RoomState::Paused;
+        } else {
+            self.state = RoomState::Waiting;
+        }
     }
     pub fn reset_game(&mut self) {
         // Reset the game to it's initial state
         self.chess_fen = chess::Board::default().to_string();
         self.memory_board = MemoryBoard::new();
-        self.turn = self.p1.to_string();
+        self.turn = self.p1.as_ref().unwrap().get_id();
         self.turn_count = 0;
-        self.playing = false;
+        self.state = RoomState::Ready;
     }
-    pub fn is_playing(&self) -> bool {
-        // Returns true if the game is currently being played
-        self.playing
+    pub fn get_state(&self) -> RoomState {
+        // Returns the state of the room
+        self.state.clone()
     }
-    pub fn is_empty(&self) -> bool {
-        // Returns true if the room is empty
-        self.p1 == "" && self.p2 == ""
+    pub fn player_count(&self) -> u32 {
+        // Returns the number of players in the room
+        let mut count = 0;
+        if self.p1.is_some() {
+            count += 1;
+        }
+        if self.p2.is_some() {
+            count += 1;
+        }
+        count
     }
     pub fn get_turn(&self) -> String {
         // Returns the player whose turn it is
@@ -86,10 +125,15 @@ impl Room {
     }
     pub fn switch_turn(&mut self) {
         // Switches the turn to the other player
-        if self.turn == self.p1 {
-            self.turn = self.p2.clone();
+        if self.state != RoomState::Playing {
+            return;
+        }
+        let p1 = self.p1.as_ref().unwrap();
+        let p2 = self.p2.as_ref().unwrap();
+        if self.turn == p1.get_id() {
+            self.turn = p2.get_id();
         } else {
-            self.turn = self.p1.clone();
+            self.turn = p1.get_id();
         }
         self.turn_count += 1;
     }
@@ -115,34 +159,38 @@ impl Room {
     }
     pub fn get_player_names(&self) -> (String, String) {
         // Returns the names of the players
-        (self.p1_name.clone(), self.p2_name.clone())
+        let n1 = self.p1.as_ref().map_or(String::new(), |p| p.get_name());
+        let n2 = self.p2.as_ref().map_or(String::new(), |p| p.get_name());
+        (n1, n2)
     }
     pub fn end_game(&mut self) {
         // Ends the game
-        self.playing = false;
+        self.state = RoomState::Over;
     }
-    pub fn get_white(&self) -> String {
+    pub fn get_white(&self) -> Option<User> {
         // Returns the white player
-        self.white.clone()
-    }
-    pub fn get_white_name(&self) -> String {
-        // Returns the name of the white player
-        if self.white == self.p1 {
-            self.p1_name.clone()
+        if self.player_count() != 2 {
+            return None;
+        }
+        let p1 = self.p1.as_ref().unwrap();
+        let p2 = self.p2.as_ref().unwrap();
+        if p1.get_chess_color() == "white" {
+            Some(p1.clone())
         } else {
-            self.p2_name.clone()
+            Some(p2.clone())
         }
     }
-    pub fn get_black(&self) -> String {
+    pub fn get_black(&self) -> Option<User> {
         // Returns the black player
-        self.black.clone()
-    }
-    pub fn get_black_name(&self) -> String {
-        // Returns the name of the black player
-        if self.black == self.p1 {
-            self.p1_name.clone()
+        if self.player_count() != 2 {
+            return None;
+        }
+        let p1 = self.p1.as_ref().unwrap();
+        let p2 = self.p2.as_ref().unwrap();
+        if p1.get_chess_color() == "black" {
+            Some(p1.clone())
         } else {
-            self.p2_name.clone()
+            Some(p2.clone())
         }
     }
 }

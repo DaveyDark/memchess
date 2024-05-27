@@ -9,6 +9,7 @@ use socket::state::SocketState;
 mod memory;
 mod room;
 mod socket;
+mod user;
 mod util;
 
 #[shuttle_runtime::main]

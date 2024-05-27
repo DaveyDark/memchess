@@ -10,6 +10,9 @@ use crate::{room::Room, socket::state::SocketState, util::get_data_from_extensio
 pub struct JoinRoom {
     room_id: String,
     name: String,
+    avatar: String,
+    avatar_orientation: String,
+    avatar_color: String,
 }
 
 pub async fn on_create_room(
@@ -23,7 +26,7 @@ pub async fn on_create_room(
         // Disconnect player from existing room
         if let Some(mut room) = state.get(room_id.clone()).await {
             room.disconnect_player(socket.id.to_string());
-            if room.is_empty() {
+            if room.player_count() == 0 {
                 state.remove(room_id.clone()).await;
             } else {
                 state.update(room_id.clone(), room).await;
@@ -80,7 +83,7 @@ pub async fn on_join_room(
         // Disconnect player from existing room
         if let Some(mut room) = state.get(rid.clone()).await {
             room.disconnect_player(socket.id.to_string());
-            if room.is_empty() {
+            if room.player_count() == 0 {
                 state.remove(rid.clone()).await;
             } else {
                 state.update(rid.clone(), room).await;
@@ -101,7 +104,13 @@ pub async fn on_join_room(
             .get(room_id.clone())
             .await
             .expect("Expected room to exist");
-        room.connect_player(socket.id.to_string(), data.name);
+        room.connect_player(
+            socket.id.to_string(),
+            data.name,
+            data.avatar,
+            data.avatar_orientation,
+            data.avatar_color,
+        );
         state.update(room_id.clone(), room).await;
 
         // Insert the room ID into the socket extensions for easy access
@@ -137,7 +146,7 @@ pub async fn on_leave_room(socket: SocketRef, state: State<SocketState>) {
                 error!("Error sending disconnection event: {:?}", e);
             });
         room.disconnect_player(socket.id.to_string());
-        if room.is_empty() {
+        if room.player_count() == 0 {
             // If the room is empty, remove it from the state
             state.remove(room_id.clone()).await;
         } else {

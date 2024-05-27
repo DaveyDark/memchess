@@ -4,7 +4,7 @@ use chess::Square;
 use socketioxide::extract::{Data, SocketRef, State};
 use tracing::error;
 
-use crate::{socket::state::SocketState, util::get_data_from_extension};
+use crate::{room::RoomState, socket::state::SocketState, util::get_data_from_extension};
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 pub struct Move {
@@ -37,8 +37,13 @@ pub async fn on_move_piece(
     let mut room = room.unwrap();
 
     // If room is inactive
-    if !room.is_playing() {
-        room.start_game(socket.id.clone().to_string());
+    if room.get_state() != RoomState::Playing {
+        if room.get_state() == RoomState::Ready || room.get_state() == RoomState::Paused {
+            // Start the game if the room is ready
+            room.start_game(socket.id.clone().to_string());
+        } else {
+            return;
+        }
     }
 
     // Get Game Board
@@ -121,18 +126,26 @@ pub async fn on_move_piece(
         state.update(room_id.clone(), room).await;
     } else if new_board.status() == chess::BoardStatus::Checkmate {
         // Checkmate
+        let white = room.get_white();
+        let black = room.get_black();
+        if white.is_none() || black.is_none() {
+            error!("Missing player in room {}", room_id);
+            return;
+        }
+        let white = white.unwrap();
+        let black = black.unwrap();
         let winner = match new_board.side_to_move() {
             chess::Color::Black => GameResult {
-                winner: room.get_white(),
-                winner_name: room.get_white_name(),
-                loser: room.get_black(),
-                loser_name: room.get_black_name(),
+                winner: white.get_id(),
+                winner_name: white.get_name(),
+                loser: black.get_id(),
+                loser_name: black.get_name(),
             },
             chess::Color::White => GameResult {
-                winner: room.get_black(),
-                winner_name: room.get_black_name(),
-                loser: room.get_white(),
-                loser_name: room.get_white_name(),
+                winner: black.get_id(),
+                winner_name: black.get_name(),
+                loser: white.get_id(),
+                loser_name: white.get_name(),
             },
         };
         socket
