@@ -41,6 +41,7 @@ const ChessBoard = () => {
     return () => {
       socket!.off("turn");
       socket!.off("piece_moved");
+      socket!.off("checkmate");
     };
   }, []);
 

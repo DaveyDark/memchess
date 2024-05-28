@@ -1,8 +1,11 @@
 import { Key, User } from "react-feather";
 import Header from "./Header";
 import { useSocket } from "./SocketProvider";
-import { useEffect, useState } from "react";
+import { useEffect, useReducer, useState } from "react";
 import { useToaster } from "./toasts/ToastProvider";
+import AvatarCreator from "./users/AvatarCreator";
+import { AVATAR_COLORS } from "../constants";
+import { IAvatar } from "../types";
 
 interface AuthProps {
   open: boolean;
@@ -10,6 +13,21 @@ interface AuthProps {
   setUsername: (username: string) => void;
   roomJoinedCallback: (roomCode: string) => void;
 }
+
+const avatarReducer = (state: IAvatar, action: any) => {
+  switch (action.type) {
+    case "SET_COLOR":
+      return { ...state, color: action.payload };
+    case "SET_ROTATION":
+      return { ...state, rotation: action.payload };
+    case "SET_AVATAR":
+      return { ...state, avatar: action.payload };
+    case "SET_ALL":
+      return { ...action.payload };
+    default:
+      return state;
+  }
+};
 
 const Auth = ({
   open,
@@ -20,6 +38,13 @@ const Auth = ({
   const socket = useSocket();
   const toast = useToaster();
   const [roomCode, setRoomCode] = useState("");
+  const [avatar, avatarDispatch] = useReducer<
+    (state: IAvatar, action: string) => IAvatar
+  >(avatarReducer, {
+    color: AVATAR_COLORS[0],
+    rotation: 0,
+    avatar: "",
+  });
 
   const joinRoom = () => {
     if (username.length === 0) {
@@ -30,10 +55,20 @@ const Auth = ({
       });
       return;
     }
+    if (avatar.avatar === "") {
+      toast({
+        content: "Please enter an avatar",
+        duration: 3000,
+        type: "error",
+      });
+    }
     if (roomCode.length === 6) {
       socket!.emit("join_room", {
         room_id: roomCode,
         name: username,
+        avatar: avatar.avatar,
+        avatar_orientation: avatar.rotation,
+        avatar_color: avatar.color,
       });
     } else {
       toast({
@@ -53,7 +88,19 @@ const Auth = ({
       });
       return;
     }
-    socket!.emit("create_room", username);
+    if (avatar.avatar === "") {
+      toast({
+        content: "Please enter an avatar",
+        duration: 3000,
+        type: "error",
+      });
+    }
+    socket!.emit("create_room", {
+      name: username,
+      avatar: avatar.avatar,
+      avatar_orientation: avatar.rotation,
+      avatar_color: avatar.color,
+    });
   };
 
   useEffect(() => {
@@ -81,7 +128,7 @@ const Auth = ({
           <Header />
           <div className="flex justify-around mb-8 mt-12 items-center max-sm:flex-col gap-4">
             <div className="flex flex-col gap-6 items-center">
-              <div className="w-28 h-28 rounded-md bg-primary"></div>
+              <AvatarCreator avatar={avatar} avatarDispatch={avatarDispatch} />
               <label className="input input-bordered flex items-center gap-2">
                 <User color="var(--accent)" />
                 <input

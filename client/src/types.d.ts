@@ -8,3 +8,9 @@ interface IToast {
   content: string;
   type: "info" | "success" | "error" | "warning";
 }
+
+interface IAvatar {
+  color: string;
+  rotation: number;
+  avatar: string;
+}

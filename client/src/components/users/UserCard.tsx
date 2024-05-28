@@ -1,9 +1,14 @@
+import { IAvatar } from "../../types";
+import Avatar from "./Avatar";
+
 interface UserCardProps {
   username: string;
+  avatar: IAvatar | undefined;
+  turn: boolean;
   reverse?: boolean;
 }
 
-const UserCard = ({ username, reverse }: UserCardProps) => {
+const UserCard = ({ username, avatar, turn, reverse }: UserCardProps) => {
   if (!username)
     return (
       <div className="flex w-full justify-between text-center py-4">
@@ -15,15 +20,15 @@ const UserCard = ({ username, reverse }: UserCardProps) => {
 
   return (
     <div
-      className={`flex w-full justify-between ${reverse && "flex-row-reverse"}`}
+      className={`flex w-full justify-between ${reverse && "flex-row-reverse"} items-center`}
     >
-      <div className="avatar">
-        <div className="w-16 rounded-lg border border-primary">
-          <img src="https://picsum.photos/200/300" />
-        </div>
+      <div>
+        <Avatar avatar={avatar} turn={turn} />
       </div>
       <div>
-        <h2 className="font-semibold">{username}</h2>
+        <h2 className={`font-semibold ${reverse ? "text-left" : "text-right"}`}>
+          {username}
+        </h2>
         <span className="countdown font-mono font-light text-2xl">
           <span style={{ "--value": 10 }}></span>:
           <span style={{ "--value": 0 }}></span>

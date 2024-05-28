@@ -17,9 +17,11 @@ function App() {
   const socket = useSocket();
 
   useEffect(() => {
-    setTimeout(() => {
+    const connectTimeout = setTimeout(() => {
       setIsConnected(socket !== undefined);
     }, 500);
+
+    return () => clearTimeout(connectTimeout);
   }, [socket]);
 
   useEffect(() => {
@@ -53,7 +55,7 @@ function App() {
       <Header />
       <div className="flex flex-col md:flex-row justify-center p-6 gap-8 my-auto h-fit rounded-lg w-full shadow-xl">
         {isLoaded && <ChessBoard />}
-        <div className="flex flex-col min-w-[25vw] flex-[0.5] justify-between gap-4 items-center">
+        <div className="flex flex-col min-w-[25vw] flex-[0.5] justify-between gap-4 items-center max-w-xs">
           <UserInfo />
           <ChatBox />
         </div>
