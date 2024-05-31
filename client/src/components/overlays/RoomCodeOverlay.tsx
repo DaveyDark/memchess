@@ -1,11 +1,11 @@
 import { Key } from "react-feather";
-import { useToaster } from "./toasts/ToastProvider";
+import { useToaster } from "../toasts/ToastProvider";
 
 interface OverlayProps {
   roomCode: string;
 }
 
-const Overlay = ({ roomCode }: OverlayProps) => {
+const RoomCodeOverlay = ({ roomCode }: OverlayProps) => {
   const toast = useToaster();
 
   const copyRoomCode = () => {
@@ -20,22 +20,24 @@ const Overlay = ({ roomCode }: OverlayProps) => {
   };
 
   return (
-    <div className="absolute left-5 top-5">
+    <div className="md:absolute left-5 md:top-5">
       <div
         className="lg:tooltip lg:tooltip-bottom lg:tooltip-secondary"
         data-tip="Copy Room Code"
       >
         <div
-          className="flex p-4 rounded-xl border border-primary 
-          gap-2 cursor-pointer"
+          className="flex p-2 md:p-4 rounded-xl border border-primary 
+            gap-2 cursor-pointer"
           onClick={() => copyRoomCode()}
         >
           <Key color="var(--primary)" />
-          <p className="text-primary font-semibold">Room: {roomCode}</p>
+          <p className="md:block hidden text-primary font-semibold">
+            Room: {roomCode}
+          </p>
         </div>
       </div>
     </div>
   );
 };
 
-export default Overlay;
+export default RoomCodeOverlay;

@@ -1,19 +1,23 @@
 import { Chessboard } from "react-chessboard";
-import { useSocket } from "./SocketProvider";
 import { useEffect, useState } from "react";
 import { Square, Piece } from "react-chessboard/dist/chessboard/types";
 import { Chess } from "chess.js";
+import { useSocket } from "../context/SocketProvider";
+import { useGameState } from "../context/GameStateProvider";
 
 const ChessBoard = () => {
   const socket = useSocket();
+  const { gameState } = useGameState();
   const [boardLock, setBoardLock] = useState(false);
+  const [waiting, setWaiting] = useState(true);
   const [game, setGame] = useState(new Chess());
 
   useEffect(() => {
-    socket!.on("turn", (player: string) => {
+    const turnListener = (player: string) => {
       setBoardLock(player !== socket!.id);
-    });
-    socket!.on("piece_moved", (data: { from: Square; to: Square }) => {
+    };
+
+    const pieceMovedListener = (data: { from: Square; to: Square }) => {
       setGame((prev) => {
         const gameCopy = new Chess(prev.fen());
         gameCopy.move({
@@ -22,28 +26,30 @@ const ChessBoard = () => {
         });
         return gameCopy;
       });
-    });
-    socket!.on(
-      "checkmate",
-      (data: {
-        winner: string;
-        winner_name: string;
-        loser: string;
-        loser_name: string;
-      }) => {
-        alert(`Checkmate! ${data.winner_name} wins!`);
-      },
-    );
-    socket!.on("stalemate", () => {
-      alert("Stalemate! The game is a draw!");
-    });
+    };
+
+    const resetGameListener = () => {
+      setGame(new Chess());
+    };
+
+    socket!.on("turn", turnListener);
+    socket!.on("piece_moved", pieceMovedListener);
+    socket!.on("game_reset", resetGameListener);
 
     return () => {
-      socket!.off("turn");
-      socket!.off("piece_moved");
-      socket!.off("checkmate");
+      socket!.off("turn", turnListener);
+      socket!.off("piece_moved", pieceMovedListener);
+      socket!.off("game_reset", resetGameListener);
     };
   }, []);
+
+  useEffect(() => {
+    if (gameState === "waiting") {
+      setWaiting(true);
+    } else {
+      setWaiting(false);
+    }
+  }, [gameState]);
 
   const handleMove = (from: Square, to: Square): boolean => {
     const gameCopy = new Chess(game.fen());
@@ -91,7 +97,7 @@ const ChessBoard = () => {
           position={game.fen()}
         />
       </div>
-      {boardLock && (
+      {waiting && (
         <div
           className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-25 
           flex items-center justify-center flex-col gap-4"

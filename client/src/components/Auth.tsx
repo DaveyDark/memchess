@@ -1,16 +1,14 @@
 import { Key, User } from "react-feather";
 import Header from "./Header";
-import { useSocket } from "./SocketProvider";
 import { useEffect, useReducer, useState } from "react";
 import { useToaster } from "./toasts/ToastProvider";
 import AvatarCreator from "./users/AvatarCreator";
 import { AVATAR_COLORS } from "../constants";
 import { IAvatar } from "../types";
+import { useSocket } from "../context/SocketProvider";
 
 interface AuthProps {
   open: boolean;
-  username: string;
-  setUsername: (username: string) => void;
   roomJoinedCallback: (roomCode: string) => void;
 }
 
@@ -29,14 +27,10 @@ const avatarReducer = (state: IAvatar, action: any) => {
   }
 };
 
-const Auth = ({
-  open,
-  username,
-  setUsername,
-  roomJoinedCallback,
-}: AuthProps) => {
+const Auth = ({ open, roomJoinedCallback }: AuthProps) => {
   const socket = useSocket();
   const toast = useToaster();
+  const [username, setUsername] = useState("");
   const [roomCode, setRoomCode] = useState("");
   const [avatar, avatarDispatch] = useReducer<
     (state: IAvatar, action: string) => IAvatar
@@ -121,9 +115,11 @@ const Auth = ({
     };
   }, [socket]);
 
+  if (!open) return null;
+
   return (
     <div className="absolute top-0 left-0 right-0 bottom-0 backdrop-blur z-50">
-      <dialog open={open} className="modal md:modal-middle">
+      <dialog open className="modal md:modal-middle">
         <div className="modal-box min-w-fit">
           <Header />
           <div className="flex justify-around mb-8 mt-12 items-center max-sm:flex-col gap-4">

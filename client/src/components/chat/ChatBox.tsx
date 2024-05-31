@@ -2,7 +2,7 @@ import { ChevronRight } from "react-feather";
 import Chat from "./Chat";
 import { useEffect, useRef, useState } from "react";
 import { IChat } from "../../types";
-import { useSocket } from "../SocketProvider";
+import { useSocket } from "../../context/SocketProvider";
 
 const ChatBox = () => {
   const [chats, setChats] = useState<IChat[]>([]);
@@ -10,15 +10,23 @@ const ChatBox = () => {
   const socket = useSocket();
 
   useEffect(() => {
-    socket!.on("chat", ({ chat, author }) => {
+    const chatListener = ({
+      chat,
+      author,
+    }: {
+      chat: string;
+      author: string;
+    }) => {
       let _chat: IChat = {
         text: chat,
         side: author === socket!.id ? "right" : "left",
       };
       setChats((prevChats) => [...prevChats, _chat]);
-    });
+    };
+
+    socket!.on("chat", chatListener);
     return () => {
-      socket!.off("chat");
+      socket!.off("chat", chatListener);
     };
   }, []);
 

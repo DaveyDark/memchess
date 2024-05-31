@@ -1,41 +1,47 @@
 import { useEffect, useState } from "react";
-import { useSocket } from "../SocketProvider";
 import UserCard from "./UserCard";
-
-interface PlayerInfo {
-  id: string;
-  name: string;
-  avatar: string;
-  avatar_orientation: number;
-  avatar_color: string;
-  chess_color: string;
-}
-
-interface IUserInfo {
-  player1: PlayerInfo | undefined;
-  player2: PlayerInfo | undefined;
-}
+import { useSocket } from "../../context/SocketProvider";
+import { useGameState } from "../../context/GameStateProvider";
+import { IUserInfo } from "../../types";
 
 const UserInfo = () => {
   const socket = useSocket();
+  const { gameState, setGameState } = useGameState();
   const [info, setInfo] = useState<IUserInfo>();
   const [turn, setTurn] = useState("");
 
   useEffect(() => {
-    socket!.on("room_joined", () => {
+    const roomJoinedListener = () => {
       socket!.emit("player_info");
-    });
-    socket!.on("player_info", (info) => {
+    };
+    const playerInfoListener = (info: IUserInfo) => {
       setInfo(info);
-    });
-    socket!.on("turn", (turn) => {
+      if (info.player1 && info.player2 && gameState === "waiting") {
+        setGameState("ready");
+      }
+    };
+    const turnListener = (turn: string) => {
       setTurn(turn);
-    });
+    };
+    const resetListener = () => {
+      setTurn("");
+    };
+    const disconnectListener = () => {
+      socket!.emit("player_info");
+    };
+
+    socket!.on("room_joined", roomJoinedListener);
+    socket!.on("player_info", playerInfoListener);
+    socket!.on("turn", turnListener);
+    socket!.on("game_reset", resetListener);
+    socket!.on("opponent_disconnected", disconnectListener);
 
     return () => {
-      socket!.off("room_joined");
-      socket!.off("player_info");
-      socket!.off("turn");
+      socket!.off("room_joined", roomJoinedListener);
+      socket!.off("player_info", playerInfoListener);
+      socket!.off("turn", turnListener);
+      socket!.off("game_reset", resetListener);
+      socket!.off("opponent_disconnected", disconnectListener);
     };
   }, []);
 

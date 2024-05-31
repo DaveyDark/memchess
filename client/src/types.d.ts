@@ -14,3 +14,19 @@ interface IAvatar {
   rotation: number;
   avatar: string;
 }
+
+type GameState = "waiting" | "ready" | "playing" | "over";
+
+interface PlayerInfo {
+  id: string;
+  name: string;
+  avatar: string;
+  avatar_orientation: number;
+  avatar_color: string;
+  chess_color: string;
+}
+
+interface IUserInfo {
+  player1: PlayerInfo | undefined;
+  player2: PlayerInfo | undefined;
+}

@@ -5,15 +5,18 @@ import MemoryBoard from "./components/MemoryBoard";
 import ChatBox from "./components/chat/ChatBox";
 import Auth from "./components/Auth";
 import { useEffect, useState } from "react";
-import { useSocket } from "./components/SocketProvider";
+import { useSocket } from "./context/SocketProvider";
 import Loader from "./components/Loader";
-import Overlay from "./components/Overlay";
+import RoomCodeOverlay from "./components/overlays/RoomCodeOverlay";
+import { useGameState } from "./context/GameStateProvider";
+import GameOver from "./components/GameOver";
+import ResetGameOverlay from "./components/overlays/ResetGameOverlay";
 
 function App() {
-  const [username, setUsername] = useState("");
   const [roomCode, setRoomCode] = useState("");
   const [isConnected, setIsConnected] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const { gameState } = useGameState();
   const socket = useSocket();
 
   useEffect(() => {
@@ -43,16 +46,11 @@ function App() {
 
   return (
     <main className="font-quicksand w-screen h-screen flex flex-col items-center p-4 gap-5">
-      {roomCode === "" && (
-        <Auth
-          open
-          username={username}
-          setUsername={setUsername}
-          roomJoinedCallback={setRoomCode}
-        />
-      )}
-      <Overlay roomCode={roomCode} />
+      <Auth open={roomCode === ""} roomJoinedCallback={setRoomCode} />
       <Header />
+      <RoomCodeOverlay roomCode={roomCode} />
+      <ResetGameOverlay />
+      <GameOver open={gameState === "over"} />
       <div className="flex flex-col md:flex-row justify-center p-6 gap-8 my-auto h-fit rounded-lg w-full shadow-xl">
         {isLoaded && <ChessBoard />}
         <div className="flex flex-col min-w-[25vw] flex-[0.5] justify-between gap-4 items-center max-w-xs">
