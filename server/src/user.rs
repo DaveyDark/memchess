@@ -1,11 +1,11 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct User {
     id: String,
     name: String,
     avatar: String,
-    avatar_orientation: String,
+    avatar_orientation: u8,
     avatar_color: String,
     chess_color: String,
 }
@@ -15,7 +15,7 @@ impl User {
         id: String,
         name: String,
         avatar: String,
-        avatar_orientation: String,
+        avatar_orientation: u8,
         avatar_color: String,
         chess_color: String,
     ) -> Self {
@@ -37,8 +37,5 @@ impl User {
     }
     pub fn get_chess_color(&self) -> String {
         self.chess_color.clone()
-    }
-    pub fn get_name(&self) -> String {
-        self.name.clone()
     }
 }

@@ -22,14 +22,14 @@ pub async fn on_player_info(socket: SocketRef, state: State<SocketState>) {
     let room = room.unwrap();
 
     // Return player data
-    let players = room.get_player_names();
+    let players = room.get_players();
     socket
         .within(room_id)
         .emit(
             "player_info",
             serde_json::json!({
                 "player1": players.0,
-                "player2": players.1
+                "player2": players.1,
             }),
         )
         .unwrap_or_else(|e| error!("Failed to emit player_info event: {}", e));

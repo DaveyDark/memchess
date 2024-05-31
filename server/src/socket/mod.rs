@@ -27,6 +27,7 @@ pub fn on_connect(socket: SocketRef) {
     // Memory Game Events
     socket.on("flip_tile", handlers::memory::on_flip_tile);
     socket.on("match_tiles", handlers::memory::on_match_tiles);
+    socket.on("get_memory_board", handlers::memory::on_get_memory_board);
 
     // Chess Game Events
     socket.on("move_piece", handlers::chess::on_move_piece);

@@ -11,14 +11,22 @@ pub struct JoinRoom {
     room_id: String,
     name: String,
     avatar: String,
-    avatar_orientation: String,
+    avatar_orientation: u8,
+    avatar_color: String,
+}
+
+#[derive(Debug, Clone, serde::Deserialize)]
+pub struct CreateRoom {
+    name: String,
+    avatar: String,
+    avatar_orientation: u8,
     avatar_color: String,
 }
 
 pub async fn on_create_room(
     socket: SocketRef,
     state: State<SocketState>,
-    Data::<String>(p1_name): Data<String>,
+    Data::<CreateRoom>(p1): Data<CreateRoom>,
 ) {
     // Check if player is already in a room
     let room_id = get_data_from_extension(&socket);
@@ -60,7 +68,13 @@ pub async fn on_create_room(
         });
 
     // Create a new room in the state
-    let new_room = Room::new(socket.id.clone().to_string(), p1_name);
+    let new_room = Room::new(
+        socket.id.clone().to_string(),
+        p1.name,
+        p1.avatar,
+        p1.avatar_orientation,
+        p1.avatar_color,
+    );
     info!("Created room {:?}", new_room.clone());
     state.add(room_id.clone(), new_room).await;
 

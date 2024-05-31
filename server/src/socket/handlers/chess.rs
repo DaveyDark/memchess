@@ -4,7 +4,9 @@ use chess::Square;
 use socketioxide::extract::{Data, SocketRef, State};
 use tracing::error;
 
-use crate::{room::RoomState, socket::state::SocketState, util::get_data_from_extension};
+use crate::{
+    room::RoomState, socket::state::SocketState, user::User, util::get_data_from_extension,
+};
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 pub struct Move {
@@ -14,10 +16,8 @@ pub struct Move {
 
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct GameResult {
-    winner: String,
-    winner_name: String,
-    loser: String,
-    loser_name: String,
+    player1: User,
+    player2: User,
 }
 
 pub async fn on_move_piece(
@@ -38,7 +38,7 @@ pub async fn on_move_piece(
 
     // If room is inactive
     if room.get_state() != RoomState::Playing {
-        if room.get_state() == RoomState::Ready || room.get_state() == RoomState::Paused {
+        if room.get_state() == RoomState::Ready {
             // Start the game if the room is ready
             room.start_game(socket.id.clone().to_string());
         } else {
@@ -118,9 +118,18 @@ pub async fn on_move_piece(
     // Check for game end
     if new_board.status() == chess::BoardStatus::Stalemate {
         // Stalemate
+        let players = room.get_players();
+        if players.0.is_none() || players.1.is_none() {
+            error!("Missing player in room {}", room_id);
+            return;
+        }
+        let result = GameResult {
+            player1: players.0.unwrap(),
+            player2: players.1.unwrap(),
+        };
         socket
             .within(room_id.clone())
-            .emit("stalemate", "")
+            .emit("stalemate", result)
             .unwrap_or_else(|e| error!("Failed to emit stalemate event: {}", e));
         room.end_game();
         state.update(room_id.clone(), room).await;
@@ -136,16 +145,12 @@ pub async fn on_move_piece(
         let black = black.unwrap();
         let winner = match new_board.side_to_move() {
             chess::Color::Black => GameResult {
-                winner: white.get_id(),
-                winner_name: white.get_name(),
-                loser: black.get_id(),
-                loser_name: black.get_name(),
+                player1: black,
+                player2: white,
             },
             chess::Color::White => GameResult {
-                winner: black.get_id(),
-                winner_name: black.get_name(),
-                loser: white.get_id(),
-                loser_name: white.get_name(),
+                player1: white,
+                player2: black,
             },
         };
         socket

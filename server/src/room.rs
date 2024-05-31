@@ -9,7 +9,6 @@ pub enum RoomState {
     Waiting,
     Ready,
     Playing,
-    Paused,
     Over,
 }
 
@@ -26,13 +25,19 @@ pub struct Room {
 }
 
 impl Room {
-    pub fn new(p1_id: String, p1_name: String) -> Self {
+    pub fn new(
+        id: String,
+        name: String,
+        avatar: String,
+        avatar_orientation: u8,
+        avatar_color: String,
+    ) -> Self {
         let p1 = User::new(
-            p1_id,
-            p1_name,
-            String::new(),
-            String::new(),
-            String::new(),
+            id,
+            name,
+            avatar,
+            avatar_orientation,
+            avatar_color,
             String::new(),
         );
 
@@ -52,10 +57,11 @@ impl Room {
         p: String,
         name: String,
         avatar: String,
-        avatar_orientation: String,
+        avatar_orientation: u8,
         avatar_color: String,
     ) {
         // Add player p to the room
+        self.reset_game();
         self.p2 = Some(User::new(
             p,
             name,
@@ -64,6 +70,7 @@ impl Room {
             avatar_color,
             String::new(),
         ));
+        self.state = RoomState::Ready;
     }
     pub fn start_game(&mut self, _p: String) {
         // Starts game with player _p
@@ -85,22 +92,17 @@ impl Room {
     pub fn disconnect_player(&mut self, p: String) {
         // Remove player p from the room
         if p == self.p1.as_ref().unwrap().get_id() {
-            self.p1 = None;
-        } else {
-            self.p2 = None;
+            self.p1 = self.p2.clone();
         }
+        self.p2 = None;
         // Stop game
-        if self.state == RoomState::Playing {
-            self.state = RoomState::Paused;
-        } else {
-            self.state = RoomState::Waiting;
-        }
+        self.state = RoomState::Waiting;
     }
     pub fn reset_game(&mut self) {
         // Reset the game to it's initial state
         self.chess_fen = chess::Board::default().to_string();
         self.memory_board = MemoryBoard::new();
-        self.turn = self.p1.as_ref().unwrap().get_id();
+        self.turn = String::new();
         self.turn_count = 0;
         self.state = RoomState::Ready;
     }
@@ -157,11 +159,9 @@ impl Room {
         // Sets the chess board from a string
         self.chess_fen = board.to_string();
     }
-    pub fn get_player_names(&self) -> (String, String) {
-        // Returns the names of the players
-        let n1 = self.p1.as_ref().map_or(String::new(), |p| p.get_name());
-        let n2 = self.p2.as_ref().map_or(String::new(), |p| p.get_name());
-        (n1, n2)
+    pub fn get_players(&self) -> (Option<User>, Option<User>) {
+        // Returns the players
+        (self.p1.clone(), self.p2.clone())
     }
     pub fn end_game(&mut self) {
         // Ends the game
