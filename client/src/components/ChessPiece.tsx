@@ -33,13 +33,7 @@ const ChessPiece = ({ piece }: ChessPieceProps) => {
     X: star,
   };
 
-  return (
-    <img
-      src={pieceMap[piece]}
-      alt={piece}
-      className="w-full aspect-square max-w-8"
-    />
-  );
+  return <img src={pieceMap[piece]} className="w-full aspect-square max-w-8" />;
 };
 
 export default ChessPiece;
