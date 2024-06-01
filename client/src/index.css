@@ -20,7 +20,7 @@
   position: absolute;
   width: 100%;
   height: 100%;
-  /* backface-visibility: hidden; */
+  backface-visibility: hidden;
   transition: transform 0.5s;
   @apply rounded-md;
 }
