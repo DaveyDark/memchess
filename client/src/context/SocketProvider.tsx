@@ -17,8 +17,8 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
   const [socket, setSocket] = useState<Socket | undefined>(undefined);
 
   useEffect(() => {
-    // socket.current = io("https://memchess-server.shuttleapp.rs");
-    const _socket = io("127.0.0.1:8000");
+    const _socket = io("https://memchess-server.shuttleapp.rs");
+    // const _socket = io("127.0.0.1:8000");
 
     _socket.on("connect", () => {
       console.debug(`Socket connected with id: ${_socket.id}`);
