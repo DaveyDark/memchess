@@ -124,6 +124,9 @@ const Auth = ({ open, roomJoinedCallback }: AuthProps) => {
           <Header />
           <div className="flex justify-around mb-8 mt-12 items-center max-sm:flex-col gap-4">
             <div className="flex flex-col gap-6 items-center">
+              <h3 className="text-lg font-semibold text-secondary">
+                Type a face!
+              </h3>
               <AvatarCreator avatar={avatar} avatarDispatch={avatarDispatch} />
               <label className="input input-bordered flex items-center gap-2">
                 <User color="var(--accent)" />
