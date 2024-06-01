@@ -6,9 +6,10 @@ interface UserCardProps {
   avatar: IAvatar | undefined;
   turn: boolean;
   reverse?: boolean;
+  you?: boolean;
 }
 
-const UserCard = ({ username, avatar, turn, reverse }: UserCardProps) => {
+const UserCard = ({ username, avatar, turn, reverse, you }: UserCardProps) => {
   if (!username)
     return (
       <div className="flex w-full justify-between text-center py-4">
@@ -20,19 +21,18 @@ const UserCard = ({ username, avatar, turn, reverse }: UserCardProps) => {
 
   return (
     <div
-      className={`flex w-full justify-between ${reverse && "flex-row-reverse"} items-center`}
+      className={`flex w-full justify-between ${reverse && "flex-row-reverse"} items-center px-2`}
     >
       <div>
         <Avatar avatar={avatar} turn={turn} />
       </div>
-      <div>
-        <h2 className={`font-semibold ${reverse ? "text-left" : "text-right"}`}>
-          {username}
+      <div className="flex flex-col h-full justify-center">
+        <h2
+          className={`font-semibold text-xl ${reverse ? "text-left" : "text-right"}`}
+        >
+          {username + (you ? " (You)" : "")}
         </h2>
-        <span className="countdown font-mono font-light text-2xl">
-          <span style={{ "--value": 10 }}></span>:
-          <span style={{ "--value": 0 }}></span>
-        </span>
+        <p className="text-primary">{turn ? "Your Turn" : "Waiting"}</p>
       </div>
     </div>
   );

@@ -49,6 +49,7 @@ const UserInfo = () => {
     <div className="border w-full p-4 rounded-lg border-primary">
       <UserCard
         username={info?.player1?.name || ""}
+        you={socket?.id === info?.player1?.id}
         avatar={
           info?.player1 && {
             color: info.player1.avatar_color,
@@ -68,6 +69,7 @@ const UserInfo = () => {
             avatar: info.player2.avatar,
           }
         }
+        you={socket?.id === info?.player2?.id}
         turn={turn == info?.player2?.id}
         reverse
       />

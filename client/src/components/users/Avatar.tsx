@@ -12,7 +12,7 @@ const Avatar = ({ avatar, turn }: AvatarProps) => {
 
   return (
     <div
-      className={`w-16 h-16 rounded-lg border border-primary ${avatar.color} relative`}
+      className={`w-16 h-16 rounded-lg border-2 border-primary ${avatar.color} relative`}
     >
       <input
         className={`w-full h-full font-mono bg-transparent rounded-lg outline-none text-2xl 
