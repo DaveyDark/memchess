@@ -21,38 +21,30 @@ const Toast = ({ duration, type, content }: ToastProps) => {
   switch (type) {
     case "error":
       return (
-        <div ref={self} className="toast z-50">
-          <div role="alert" className="alert alert-error">
-            <AlertCircle color="white" />
-            <span className="text-white">{content}</span>
-          </div>
+        <div role="alert" className="alert alert-error z-50" ref={self}>
+          <AlertCircle color="white" />
+          <span className="text-white">{content}</span>
         </div>
       );
     case "success":
       return (
-        <div ref={self} className="toast z-50">
-          <div role="alert" className="alert alert-success">
-            <CheckCircle color="white" />
-            <span className="text-white">{content}</span>
-          </div>
+        <div role="alert" className="alert alert-success z-50" ref={self}>
+          <CheckCircle color="white" />
+          <span className="text-white">{content}</span>
         </div>
       );
     case "info":
       return (
-        <div ref={self} className="toast z-50">
-          <div role="alert" className="alert alert-info">
-            <Info color="white" />
-            <span className="text-white">{content}</span>
-          </div>
+        <div role="alert" className="alert alert-info z-50" ref={self}>
+          <Info color="white" />
+          <span className="text-white">{content}</span>
         </div>
       );
     case "warning":
       return (
-        <div ref={self} className="toast z-50">
-          <div role="alert" className="alert alert-warning">
-            <AlertCircle color="white" />
-            <span className="text-white">{content}</span>
-          </div>
+        <div role="alert" className="alert alert-warning z-50" ref={self}>
+          <AlertCircle color="white" />
+          <span className="text-white">{content}</span>
         </div>
       );
   }

@@ -1,3 +1,14 @@
+import { Shape } from "canvas-confetti";
+
+export type ConfettiOptions = {
+  shapes: Shape[];
+  colors: string[];
+  particleCount: number;
+  spread: number;
+  startVelocity: number;
+  gravity: number;
+};
+
 export const AVATAR_COLORS = [
   "bg-avatar-1",
   "bg-avatar-2",
@@ -206,3 +217,36 @@ export const CONFETTI_COLORS = [
   "#53c2cf",
   "#d0e9dd",
 ];
+
+export const matchConfettiOptions: ConfettiOptions = {
+  particleCount: 50,
+  spread: 60,
+  startVelocity: 20,
+  gravity: 0.6,
+  shapes: ["square", "circle"],
+  colors: CONFETTI_COLORS,
+};
+
+export const fireConfettiOptions: ConfettiOptions = {
+  particleCount: 50,
+  spread: 90,
+  startVelocity: 5,
+  gravity: 0.4,
+  shapes: ["circle", "square"],
+  colors: CONFETTI_COLORS,
+};
+
+export const PIECE_MAP = {
+  bq: "Black Queen",
+  bk: "Black King",
+  br: "Black Rook",
+  bb: "Black Bishop",
+  bn: "Black Knight",
+  bp: "Black Pawn",
+  wq: "White Queen",
+  wk: "White King",
+  wr: "White Rook",
+  wb: "White Bishop",
+  wn: "White Knight",
+  wp: "White Pawn",
+};

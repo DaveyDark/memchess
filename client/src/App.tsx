@@ -10,7 +10,7 @@ import Loader from "./components/Loader";
 import RoomCodeOverlay from "./components/overlays/RoomCodeOverlay";
 import { useGameState } from "./context/GameStateProvider";
 import GameOver from "./components/GameOver";
-import ResetGameOverlay from "./components/overlays/ResetGameOverlay";
+import ControlsOverlay from "./components/overlays/ControlsOverlay";
 
 function App() {
   const [roomCode, setRoomCode] = useState("");
@@ -49,7 +49,7 @@ function App() {
       <Auth open={roomCode === ""} roomJoinedCallback={setRoomCode} />
       <Header />
       <RoomCodeOverlay roomCode={roomCode} />
-      <ResetGameOverlay />
+      <ControlsOverlay setRoomCode={setRoomCode} />
       <GameOver open={gameState === "over"} />
       <div className="flex flex-col md:flex-row justify-center p-6 gap-8 my-auto h-fit rounded-lg w-full shadow-xl">
         {isLoaded && <ChessBoard />}

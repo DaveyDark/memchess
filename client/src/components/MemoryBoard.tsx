@@ -2,7 +2,11 @@ import { useEffect, useState } from "react";
 import { useSocket } from "../context/SocketProvider";
 import { useGameState } from "../context/GameStateProvider";
 import ChessPiece from "./ChessPiece";
-import { CONFETTI_COLORS, defaultMemoryBoard } from "../constants";
+import {
+  defaultMemoryBoard,
+  fireConfettiOptions,
+  matchConfettiOptions,
+} from "../constants";
 import confetti from "canvas-confetti";
 
 type Tile = { value: string; flipped: boolean }[];
@@ -28,7 +32,7 @@ const MemoryBoard = () => {
     }
   };
 
-  const handleConfetti = (i: number) => {
+  const handleConfetti = (i: number, options = matchConfettiOptions) => {
     const tile = document.getElementById(`tile-${i}`);
     if (!tile) return;
     const rect = tile.getBoundingClientRect();
@@ -36,15 +40,11 @@ const MemoryBoard = () => {
     const y = rect.top + rect.height / 2;
 
     confetti({
-      particleCount: 50,
-      spread: 70,
+      ...options,
       origin: {
         x: x / window.innerWidth,
         y: y / window.innerHeight,
       },
-      startVelocity: 20,
-      gravity: 0.6,
-      colors: CONFETTI_COLORS,
     })?.then(() => {
       console.log("Confetti done");
     });
@@ -100,6 +100,18 @@ const MemoryBoard = () => {
       }
     };
 
+    const removeTilesListener = (...targets: number[]) => {
+      setTiles((previousTiles) => {
+        return previousTiles.map((tile, index) => {
+          if (targets.includes(index)) {
+            handleConfetti(index, fireConfettiOptions);
+            return { ...tile, value: "" };
+          }
+          return tile;
+        });
+      });
+    };
+
     const resetListener = () => {
       setFlips([]);
       setBoardLock(false);
@@ -111,6 +123,7 @@ const MemoryBoard = () => {
     socket?.on("tiles_matched", matchTilesListener);
     socket?.on("turn", turnListener);
     socket?.on("game_reset", resetListener);
+    socket?.on("remove_tiles", removeTilesListener);
 
     return () => {
       socket?.off("memory_board", memoryBoardListener);
@@ -119,6 +132,7 @@ const MemoryBoard = () => {
       socket?.off("tiles_matched", matchTilesListener);
       socket?.off("turn", turnListener);
       socket?.off("game_reset", resetListener);
+      socket?.off("remove_tiles", removeTilesListener);
     };
   }, []);
 
@@ -133,7 +147,10 @@ const MemoryBoard = () => {
   }, [gameState]);
 
   return (
-    <div className="bg-secondary rounded-md grid grid-rows-8 grid-cols-8 p-4 gap-2 my-auto flex-1 relative">
+    <div
+      className={`bg-secondary rounded-md grid grid-rows-8 grid-cols-8 p-4 gap-2 
+      my-auto flex-1 relative border-4 ${flips.length <= 1 ? "border-primary" : "border-secondary"}`}
+    >
       {tiles.map((tile, i) => (
         <div
           className={`card min-w-4 aspect-square text-xl ${tile.flipped && "card-flipped"} ${tile.value === "" && "invisible"}`}
