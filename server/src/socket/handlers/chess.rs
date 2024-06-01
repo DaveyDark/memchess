@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use chess::Square;
+use chess::{BoardBuilder, Piece, Square};
 use socketioxide::extract::{Data, SocketRef, State};
 use tracing::error;
 
@@ -12,6 +12,7 @@ use crate::{
 pub struct Move {
     from: String,
     to: String,
+    promotion: String,
 }
 
 #[derive(Debug, Clone, serde::Serialize)]
@@ -52,7 +53,7 @@ pub async fn on_move_piece(
         Err(_) => {
             // Emit Error if chess fen is illegal/corrupt
             socket
-                .to(room_id)
+                .within(room_id)
                 .emit("illegal_fen", "Fatal error")
                 .unwrap_or_else(|e| error!("Failed to emit illegal_fen event: {}", e));
             return;
@@ -62,11 +63,17 @@ pub async fn on_move_piece(
     // Parse given move
     let from = Square::from_str(&_move.from);
     let to = Square::from_str(&_move.to);
+    let promotion = match _move.promotion.as_str() {
+        "q" => Some(Piece::Queen),
+        "r" => Some(Piece::Rook),
+        "b" => Some(Piece::Bishop),
+        "n" => Some(Piece::Knight),
+        _ => None,
+    };
     if from.is_err() || to.is_err() {
         // Emit error if move is invalid
         error!("Invalid move: {:?} in room {}", _move, room_id);
         socket
-            .to(room_id)
             .emit("invalid_move", "")
             .unwrap_or_else(|e| error!("Failed to emit invalid_move event: {}", e));
         return;
@@ -74,7 +81,7 @@ pub async fn on_move_piece(
     let from = from.unwrap();
     let to = to.unwrap();
 
-    let chess_move = chess::ChessMove::new(from, to, None);
+    let chess_move = chess::ChessMove::new(from, to, promotion);
 
     // Check if move is legal
     if !board.legal(chess_move) {
@@ -107,8 +114,12 @@ pub async fn on_move_piece(
         };
         // Remove corresponding piece from memory board
         let mut memory_board = room.get_memory_board();
-        memory_board.remove_tiles(capture.to_string());
+        let removed = memory_board.remove_tiles(capture.to_string());
         room.set_memory_board(memory_board);
+        socket
+            .within(room_id.clone())
+            .emit("remove_tiles", removed)
+            .unwrap_or_else(|e| error!("Failed to emit emove_tiles event: {}", e));
     }
 
     // Set the new board
@@ -173,4 +184,64 @@ pub async fn on_move_piece(
             .emit("turn", room.get_turn())
             .unwrap_or_else(|e| error!("Failed to emit turn event: {}", e));
     }
+}
+
+pub async fn on_clear_square(
+    socket: SocketRef,
+    state: State<SocketState>,
+    Data::<String>(square): Data<String>,
+) {
+    let room_id = get_data_from_extension(&socket);
+    // Get room
+    let room = state.get(room_id.clone()).await;
+
+    // Return if no room is found
+    if room.is_none() {
+        error!("Room {} not found", room_id);
+        return;
+    }
+    let mut room = room.unwrap();
+
+    // If room is inactive
+    if room.get_state() != RoomState::Playing {
+        if room.get_state() == RoomState::Ready {
+            // Start the game if the room is ready
+            room.start_game(socket.id.clone().to_string());
+        } else {
+            return;
+        }
+    }
+
+    // Get Game Board
+    let board = match room.get_chess_board() {
+        Ok(board) => board,
+        Err(_) => {
+            // Emit Error if chess fen is illegal/corrupt
+            socket
+                .to(room_id)
+                .emit("illegal_fen", "Fatal error")
+                .unwrap_or_else(|e| error!("Failed to emit illegal_fen event: {}", e));
+            return;
+        }
+    };
+
+    // Convert to BoardBuilder
+    let mut builder = BoardBuilder::from(board);
+
+    // Remove corresponding piece from chess board
+    builder.clear_square(Square::from_str(&square).unwrap());
+
+    // Convert back to board
+    let new_board: Result<chess::Board, _> = builder.try_into();
+    if new_board.is_err() {
+        socket
+            .emit("clear_failed", "Invalid fen")
+            .unwrap_or_else(|e| error!("Failed to emit clear_failed event: {}", e));
+        return;
+    }
+
+    socket
+        .within(room_id.clone())
+        .emit("square_cleared", square)
+        .unwrap_or_else(|e| error!("Failed to emit square_cleared event: {}", e));
 }

@@ -31,6 +31,7 @@ pub fn on_connect(socket: SocketRef) {
 
     // Chess Game Events
     socket.on("move_piece", handlers::chess::on_move_piece);
+    socket.on("clear_square", handlers::chess::on_clear_square);
 
     // Chat Events
     socket.on("chat", handlers::chat::on_chat);

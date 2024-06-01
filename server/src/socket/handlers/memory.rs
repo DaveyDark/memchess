@@ -47,10 +47,14 @@ pub async fn on_match_tiles(socket: SocketRef, state: State<SocketState>) {
         }
         let board = room.get_mut_memory_board();
         let tiles = board.get_flips();
-        if board.match_tiles() {
+        let matched = board.match_tiles();
+        if matched.get_matches().len() != 0 {
+            socket
+                .emit("select_piece", matched.get_tile())
+                .unwrap_or_else(|e| error!("Failed to get tile: {}", e));
             socket
                 .within(room_id.clone())
-                .emit("tiles_matched", tiles)
+                .emit("tiles_matched", matched.get_matches())
                 .unwrap_or_else(|e| error!("Failed to emit tiles_matched event: {}", e));
         } else {
             socket
