@@ -121,9 +121,13 @@ impl Room {
         }
         count
     }
-    pub fn get_turn(&self) -> String {
+    pub fn get_turn(&self) -> Option<String> {
         // Returns the player whose turn it is
-        self.turn.clone()
+        if self.turn != String::new() {
+            Some(self.turn.clone())
+        } else {
+            None
+        }
     }
     pub fn switch_turn(&mut self) {
         // Switches the turn to the other player

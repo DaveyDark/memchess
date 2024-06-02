@@ -3,7 +3,7 @@ use tracing::{error, info};
 
 use crate::{socket::state::SocketState, util::get_data_from_extension};
 
-pub fn on_message(socket: SocketRef, Data::<String>(data): Data<String>) {
+pub async fn on_message(socket: SocketRef, Data::<String>(data): Data<String>) {
     // Debug event to test communication
     info!(
         "Received message: {:?} from {}",
@@ -20,7 +20,7 @@ pub async fn on_rooms(socket: SocketRef, state: State<SocketState>) {
         });
 }
 
-pub fn on_extensions(socket: SocketRef) {
+pub async fn on_extensions(socket: SocketRef) {
     socket
         .emit(
             "extensions",

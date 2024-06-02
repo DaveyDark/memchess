@@ -12,7 +12,7 @@ pub struct SocketState {
 }
 
 impl SocketState {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         // Returns a new empty SocketState
         Self {
             rooms: RwLock::new(HashMap::new()),

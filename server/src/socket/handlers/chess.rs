@@ -122,6 +122,24 @@ pub async fn on_move_piece(
             .unwrap_or_else(|e| error!("Failed to emit emove_tiles event: {}", e));
     }
 
+    // Check if move is a pawn promotion
+    if promotion.is_some() {
+        // Add corresponding piece to memory board
+        let mut memory_board = room.get_memory_board();
+        let tiles = memory_board.upgrade_tile(
+            promotion.unwrap().to_string(board.side_to_move()),
+            board.side_to_move(),
+        );
+        if let Some(t) = tiles {
+            println!("{:?}", memory_board);
+            room.set_memory_board(memory_board);
+            socket
+                .within(room_id.clone())
+                .emit("upgrade_tile", t)
+                .unwrap_or_else(|e| error!("Failed to emit add_tile event: {}", e));
+        }
+    }
+
     // Set the new board
     let new_board = board.make_move_new(chess_move);
     room.set_chess_board(new_board);
@@ -175,14 +193,17 @@ pub async fn on_move_piece(
         state.update(room_id.clone(), room.clone()).await;
         // Emit the move to the opponent
         socket
-            .to(room_id.clone())
+            .within(room_id.clone())
             .emit("piece_moved", _move)
             .unwrap_or_else(|e| error!("Failed to emit piece_moved event: {}", e));
         // Emit turn event
-        socket
-            .within(room_id.clone())
-            .emit("turn", room.get_turn())
-            .unwrap_or_else(|e| error!("Failed to emit turn event: {}", e));
+        let turn = room.get_turn();
+        if let Some(turn) = turn {
+            socket
+                .within(room_id.clone())
+                .emit("turn", turn)
+                .unwrap_or_else(|e| error!("Failed to emit turn event: {}", e));
+        }
     }
 }
 

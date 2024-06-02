@@ -167,6 +167,14 @@ pub async fn on_leave_room(socket: SocketRef, state: State<SocketState>) {
             // Otherwise, update the state with the new room data
             state.update(room_id.clone(), room).await;
         }
+        // Clear extensions
+        socket.extensions.clear();
+        socket.extensions.insert(format!("{}|", socket.id));
+
+        // Leave the room
+        socket.leave(room_id.clone()).unwrap_or_else(|e| {
+            error!("Error leaving room: {:?}", e);
+        });
     }
     info!("Player {} left room {}", socket.id, room_id);
 }

@@ -16,6 +16,12 @@ pub struct MatchedTiles {
     matches: Vec<usize>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Tile {
+    index: usize,
+    value: String,
+}
+
 impl MatchedTiles {
     pub fn new_empty() -> Self {
         Self {
@@ -41,15 +47,14 @@ impl MemoryBoard {
         // Available tiles, 60 of them represent chess pieces, 4 are for wildcards
         // x is a wildcard, w is white, b is black
         // q is queen, r is rook, b is bishop, n is knight, p is pawn
-        // small letters represent first tile and capital letters represent it's matching second tile
         // _ at the end means the tile has been flipped
         // matched tiles will become empty strings
         const TILES: [&str; 64] = [
             "x", "bq", "br", "br", "bb", "bb", "bn", "bn", "bp", "bp", "bp", "bp", "bp", "bp",
             "bp", "bp", "x", "wq", "wr", "wr", "wb", "wb", "wn", "wn", "wp", "wp", "wp", "wp",
-            "wp", "wp", "wp", "wp", "X", "BQ", "BR", "BR", "BB", "BB", "BN", "BN", "BP", "BP",
-            "BP", "BP", "BP", "BP", "BP", "BP", "X", "WQ", "WR", "WR", "WB", "WB", "WN", "WN",
-            "WP", "WP", "WP", "WP", "WP", "WP", "WP", "WP",
+            "wp", "wp", "wp", "wp", "x", "bq", "br", "br", "bb", "bb", "bn", "bn", "bp", "bp",
+            "bp", "bp", "bp", "bp", "bp", "bp", "x", "wq", "wr", "wr", "wb", "wb", "wn", "wn",
+            "wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp",
         ];
 
         // Add tiles from the above array to the board
@@ -89,12 +94,22 @@ impl MemoryBoard {
         }
         let t1 = self.board[self.flips[0]].clone();
         let t2 = self.board[self.flips[1]].clone();
-        let t1 = t1.trim_matches('_').to_ascii_lowercase();
-        let t2 = t2.trim_matches('_').to_ascii_lowercase();
+        let t1 = t1.trim_matches('_');
+        let t2 = t2.trim_matches('_');
         let mut matches = vec![];
         // Check for wildcards
         if t1 == "x" || t2 == "x" {
             // Wildcard will match any tile
+            // Check if both tiles are wildcards
+            if t1 == "x" && t2 == "x" {
+                // Clear both tiles
+                self.board[self.flips[0]] = String::new();
+                self.board[self.flips[1]] = String::new();
+                matches.push(self.flips[0]);
+                matches.push(self.flips[1]);
+                self.flips.clear();
+                return MatchedTiles::new("x".to_string(), matches);
+            }
             // Clear both tiles + the actual match of the non-wildcard tile
             let tile_index = if t1 == "x" {
                 self.flips[1]
@@ -110,7 +125,7 @@ impl MemoryBoard {
             matches.push(self.flips[1]);
             matches.push(matched_tile);
             self.flips.clear();
-            return MatchedTiles::new(tile, matches);
+            return MatchedTiles::new(tile.to_string(), matches);
         }
 
         // Otherwise, check for equality
@@ -135,10 +150,10 @@ impl MemoryBoard {
 
     fn find_matching_tile(&self, index: usize) -> Option<usize> {
         // Find the matching tile for the given index
-        let tile = self.board[index].trim_matches('_').to_ascii_lowercase();
+        let tile = self.board[index].trim_matches('_');
         let mut matches = vec![];
         for (i, t) in self.board.iter().enumerate() {
-            if i != index && t.to_ascii_lowercase().trim_matches('_') == tile {
+            if i != index && t.trim_matches('_') == tile {
                 matches.push(i);
             }
         }
@@ -155,7 +170,7 @@ impl MemoryBoard {
         // Find matching tiles
         let mut matches = vec![];
         for (i, tile) in self.board.iter_mut().enumerate() {
-            if tile.to_ascii_lowercase().trim_matches('_') == &piece {
+            if tile.trim_matches('_') == &piece {
                 matches.push(i);
             }
         }
@@ -180,5 +195,46 @@ impl MemoryBoard {
     pub fn get_flips(&self) -> Vec<usize> {
         // Returns the indices of the flipped tiles
         self.flips.clone()
+    }
+
+    pub fn upgrade_tile(&mut self, piece: String, color: chess::Color) -> Option<(Tile, Tile)> {
+        // Upgrades the tile to the given piece
+        // Find the pawn tiles matching the given piece
+        let color = match color {
+            chess::Color::White => 'w',
+            chess::Color::Black => 'b',
+        };
+        let target = format!("{}p", color);
+        let mut matches = vec![];
+        for (i, tile) in self.board.iter().enumerate() {
+            if tile.trim_matches('_') == target {
+                matches.push(i);
+            }
+        }
+        if matches.len() < 2 {
+            return None;
+        }
+
+        let t1 = rand::thread_rng().gen_range(0..matches.len());
+        let mut t2 = t1;
+        while t2 == t1 {
+            t2 = rand::thread_rng().gen_range(0..matches.len());
+        }
+
+        // Set the matching tiles to the given piece
+        self.board[matches[t1]] = format!("{}{}", color, piece.to_ascii_lowercase());
+        self.board[matches[t2]] = format!("{}{}", color, piece.to_ascii_lowercase());
+
+        // Return affected tile indices
+        Some((
+            Tile {
+                index: matches[t1],
+                value: self.board[matches[t1]].clone(),
+            },
+            Tile {
+                index: matches[t2],
+                value: self.board[matches[t2]].clone(),
+            },
+        ))
     }
 }

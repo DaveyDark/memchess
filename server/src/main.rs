@@ -15,7 +15,7 @@ mod util;
 #[shuttle_runtime::main]
 pub async fn axum() -> shuttle_axum::ShuttleAxum {
     // State for the socket server
-    let rooms = SocketState::new();
+    let rooms = SocketState::new().await;
 
     // Create a SocketIO server layer with the state
     let (layer, io) = SocketIoBuilder::new().with_state(rooms).build_layer();

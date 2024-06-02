@@ -14,10 +14,13 @@ pub async fn on_flip_tile(
         if room.get_state() != RoomState::Playing {
             if room.get_state() == RoomState::Ready {
                 room.start_game(socket.id.to_string());
-                socket
-                    .within(room_id.clone())
-                    .emit("turn", room.get_turn())
-                    .unwrap_or_else(|e| error!("Failed to emit turn event: {}", e));
+                let turn = room.get_turn();
+                if let Some(turn) = turn {
+                    socket
+                        .within(room_id.clone())
+                        .emit("turn", turn)
+                        .unwrap_or_else(|e| error!("Failed to emit turn event: {}", e));
+                }
             } else {
                 error!("Received flip_tile event for non-playing room {}", room_id);
                 return;

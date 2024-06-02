@@ -6,7 +6,7 @@ use crate::{socket::state::SocketState, util::get_data_from_extension};
 pub mod handlers;
 pub mod state;
 
-pub fn on_connect(socket: SocketRef) {
+pub async fn on_connect(socket: SocketRef) {
     info!("New connection: {:?}", socket);
     // Set extensions
     // Extensions will store the username and current room of the player, separated by a "|"
