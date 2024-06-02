@@ -31,9 +31,7 @@ const RoomCodeOverlay = ({ roomCode }: OverlayProps) => {
           onClick={() => copyRoomCode()}
         >
           <Key color="var(--primary)" />
-          <p className="md:block hidden text-primary font-semibold">
-            Room: {roomCode}
-          </p>
+          <p className="text-primary font-semibold">Room: {roomCode}</p>
         </div>
       </div>
     </div>

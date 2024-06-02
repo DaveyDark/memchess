@@ -18,7 +18,7 @@ export const ToastProvider = ({ children }: { children: ReactNode }) => {
   return (
     <ToastContext.Provider value={createToast}>
       {children}
-      <div className="toast">
+      <div className="toast z-50">
         {toasts?.map((t, i) => (
           <Toast
             content={t.content}

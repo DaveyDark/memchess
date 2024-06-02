@@ -35,8 +35,6 @@ const ChessBoard = () => {
         x: x / window.innerWidth,
         y: y / window.innerHeight,
       },
-    })?.then(() => {
-      console.log("Confetti done");
     });
   };
 
@@ -90,22 +88,22 @@ const ChessBoard = () => {
       });
     };
 
-    socket!.on("turn", turnListener);
-    socket!.on("piece_moved", pieceMovedListener);
-    socket!.on("game_reset", resetGameListener);
-    socket!.on("select_piece", selectPieceListener);
-    socket!.on("square_cleared", squareClearedListener);
-    socket!.on("clear_failed", clearFailedListener);
+    socket?.on("turn", turnListener);
+    socket?.on("piece_moved", pieceMovedListener);
+    socket?.on("game_reset", resetGameListener);
+    socket?.on("select_piece", selectPieceListener);
+    socket?.on("square_cleared", squareClearedListener);
+    socket?.on("clear_failed", clearFailedListener);
 
     return () => {
-      socket!.off("turn", turnListener);
-      socket!.off("piece_moved", pieceMovedListener);
-      socket!.off("game_reset", resetGameListener);
-      socket!.off("select_piece", selectPieceListener);
-      socket!.off("square_cleared", squareClearedListener);
-      socket!.off("clear_failed", clearFailedListener);
+      socket?.off("turn", turnListener);
+      socket?.off("piece_moved", pieceMovedListener);
+      socket?.off("game_reset", resetGameListener);
+      socket?.off("select_piece", selectPieceListener);
+      socket?.off("square_cleared", squareClearedListener);
+      socket?.off("clear_failed", clearFailedListener);
     };
-  }, []);
+  }, [socket]);
 
   useEffect(() => {
     if (gameState === "waiting") {

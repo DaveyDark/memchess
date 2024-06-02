@@ -30,20 +30,20 @@ const UserInfo = () => {
       socket!.emit("player_info");
     };
 
-    socket!.on("room_joined", roomJoinedListener);
-    socket!.on("player_info", playerInfoListener);
-    socket!.on("turn", turnListener);
-    socket!.on("game_reset", resetListener);
-    socket!.on("opponent_disconnected", disconnectListener);
+    socket?.on("room_joined", roomJoinedListener);
+    socket?.on("player_info", playerInfoListener);
+    socket?.on("turn", turnListener);
+    socket?.on("game_reset", resetListener);
+    socket?.on("opponent_disconnected", disconnectListener);
 
     return () => {
-      socket!.off("room_joined", roomJoinedListener);
-      socket!.off("player_info", playerInfoListener);
-      socket!.off("turn", turnListener);
-      socket!.off("game_reset", resetListener);
-      socket!.off("opponent_disconnected", disconnectListener);
+      socket?.off("room_joined", roomJoinedListener);
+      socket?.off("player_info", playerInfoListener);
+      socket?.off("turn", turnListener);
+      socket?.off("game_reset", resetListener);
+      socket?.off("opponent_disconnected", disconnectListener);
     };
-  }, []);
+  }, [socket]);
 
   return (
     <div className="border w-full p-4 rounded-lg border-primary">

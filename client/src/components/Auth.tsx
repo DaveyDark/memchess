@@ -110,8 +110,8 @@ const Auth = ({ open, roomJoinedCallback }: AuthProps) => {
     });
 
     return () => {
-      socket!.off("room_joined");
-      socket!.off("join_failed");
+      socket?.off("room_joined");
+      socket?.off("join_failed");
     };
   }, [socket]);
 

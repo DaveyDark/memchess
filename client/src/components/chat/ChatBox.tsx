@@ -24,11 +24,11 @@ const ChatBox = () => {
       setChats((prevChats) => [...prevChats, _chat]);
     };
 
-    socket!.on("chat", chatListener);
+    socket?.on("chat", chatListener);
     return () => {
-      socket!.off("chat", chatListener);
+      socket?.off("chat", chatListener);
     };
-  }, []);
+  }, [socket]);
 
   useEffect(() => {
     const chatContainer = document.querySelector(".chat-container");

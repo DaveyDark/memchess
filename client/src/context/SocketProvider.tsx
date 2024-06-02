@@ -21,22 +21,9 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     // const _socket = io("127.0.0.1:8000");
 
     _socket.on("connect", () => {
-      console.debug(`Socket connected with id: ${_socket.id}`);
       setSocket(_socket);
 
-      _socket.onAny((event: string, ...args: any[]) => {
-        console.debug(`Received event: ${event}`);
-        console.debug(args);
-      });
-
-      _socket.onAnyOutgoing((event: string, ...args: any[]) => {
-        console.debug(`Emitting event: ${event}`);
-        console.debug(args);
-      });
-
       _socket.on("disconnect", () => {
-        _socket.offAny();
-        _socket.offAnyOutgoing();
         setSocket(undefined);
       });
     });

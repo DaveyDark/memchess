@@ -16,7 +16,7 @@ const Chat = ({ chats }: ChatProps) => {
     );
 
   return (
-    <div className="chat-container overflow-y-scroll py-4 min-w-full w-min h-[30vh] text-sm">
+    <div className="chat-container overflow-y-scroll py-4 min-w-full w-min h-[30vh] text-sm no-scrollbar scroll-smooth">
       {chats.map((chat, index) => (
         <ChatBubble key={index} text={chat.text} side={chat.side} />
       ))}

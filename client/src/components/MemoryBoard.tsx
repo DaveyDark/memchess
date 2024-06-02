@@ -45,8 +45,6 @@ const MemoryBoard = () => {
         x: x / window.innerWidth,
         y: y / window.innerHeight,
       },
-    })?.then(() => {
-      console.log("Confetti done");
     });
   };
 
@@ -134,7 +132,7 @@ const MemoryBoard = () => {
       socket?.off("game_reset", resetListener);
       socket?.off("remove_tiles", removeTilesListener);
     };
-  }, []);
+  }, [socket]);
 
   useEffect(() => {
     if (gameState === "ready") {

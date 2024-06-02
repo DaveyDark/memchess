@@ -23,14 +23,14 @@ const GameOver = ({ open }: { open: boolean }) => {
       setResult("Stalemate");
     };
 
-    socket!.on("checkmate", checkmateListener);
-    socket!.on("stalemate", stalemateListener);
+    socket?.on("checkmate", checkmateListener);
+    socket?.on("stalemate", stalemateListener);
 
     return () => {
-      socket!.off("checkmate", checkmateListener);
-      socket!.off("stalemate", stalemateListener);
+      socket?.off("checkmate", checkmateListener);
+      socket?.off("stalemate", stalemateListener);
     };
-  }, []);
+  }, [socket]);
 
   const handleReset = () => {
     socket?.emit("reset_game");

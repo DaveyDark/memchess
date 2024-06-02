@@ -32,7 +32,9 @@ const UserCard = ({ username, avatar, turn, reverse, you }: UserCardProps) => {
         >
           {username + (you ? " (You)" : "")}
         </h2>
-        <p className="text-primary">{turn ? "Your Turn" : "Waiting"}</p>
+        <p className={`text-primary ${reverse || "text-right"}`}>
+          {turn ? "Your Turn" : "Waiting"}
+        </p>
       </div>
     </div>
   );
