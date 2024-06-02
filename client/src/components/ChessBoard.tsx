@@ -45,12 +45,16 @@ const ChessBoard = () => {
 
     const pieceMovedListener = (data: { from: Square; to: Square }) => {
       setGame((prev) => {
-        const gameCopy = new Chess(prev.fen());
-        gameCopy.move({
-          ...data,
-          promotion: "q",
-        });
-        return gameCopy;
+        try {
+          const gameCopy = new Chess(prev.fen());
+          gameCopy.move({
+            ...data,
+            promotion: "q",
+          });
+          return gameCopy;
+        } catch (e) {
+          return prev;
+        }
       });
     };
 
@@ -58,9 +62,21 @@ const ChessBoard = () => {
       setGame(new Chess());
       setBoardLock(false);
       setSelectMode("");
+      setWaiting(false);
+      setSquareHighlight([]);
     };
 
     const selectPieceListener = (piece: string) => {
+      // Check for wildcards
+      if (piece === "x") {
+        toast({
+          content: "Please select any piece(except king)",
+          duration: 3000,
+          type: "success",
+        });
+        setSelectMode("x");
+        return;
+      }
       toast({
         // @ts-ignore
         content: `Please select a ${PIECE_MAP[piece.toLowerCase()]}`,
@@ -88,12 +104,19 @@ const ChessBoard = () => {
       });
     };
 
+    const disconnectListener = () => {
+      setBoardLock(true);
+      setWaiting(true);
+    };
+
     socket?.on("turn", turnListener);
     socket?.on("piece_moved", pieceMovedListener);
     socket?.on("game_reset", resetGameListener);
     socket?.on("select_piece", selectPieceListener);
     socket?.on("square_cleared", squareClearedListener);
     socket?.on("clear_failed", clearFailedListener);
+    socket?.on("room_joined", resetGameListener);
+    socket?.on("opponent_disconnected", disconnectListener);
 
     return () => {
       socket?.off("turn", turnListener);
@@ -102,6 +125,8 @@ const ChessBoard = () => {
       socket?.off("select_piece", selectPieceListener);
       socket?.off("square_cleared", squareClearedListener);
       socket?.off("clear_failed", clearFailedListener);
+      socket?.off("room_joined", resetGameListener);
+      socket?.off("opponent_disconnected", disconnectListener);
     };
   }, [socket]);
 
@@ -116,6 +141,19 @@ const ChessBoard = () => {
   useEffect(() => {
     if (selectMode === "") {
       setSquareHighlight([]);
+      return;
+    }
+    if (selectMode === "x") {
+      setSquareHighlight(
+        game
+          .board()
+          .flat()
+          .filter((sq) => {
+            if (sq?.type === "k") return false;
+            return true;
+          })
+          .map((sq) => sq?.square as Square),
+      );
       return;
     }
     const pieceType = selectMode.charAt(1).toLowerCase();
@@ -147,8 +185,8 @@ const ChessBoard = () => {
       // illegal move
       return false;
     }
-
     setGame(gameCopy);
+
     return true;
   };
 
@@ -181,6 +219,11 @@ const ChessBoard = () => {
 
   const selectPiece = (piece: Piece, square: Square) => {
     if (selectMode === "") return;
+    if (selectMode === "x") {
+      if (piece.toLowerCase() === "k") return;
+      socket!.emit("clear_square", square);
+      return;
+    }
     if (piece.toUpperCase() == selectMode.substring(0, 2).toUpperCase()) {
       socket!.emit("clear_square", square);
     }
@@ -208,7 +251,6 @@ const ChessBoard = () => {
           onPieceDrop={movePiece}
           onPromotionPieceSelect={promotePiece}
           onPieceClick={selectPiece}
-          onSquareClick={(sq) => handleConfetti(sq)}
           isDraggablePiece={isMovable}
           position={game.fen()}
         />

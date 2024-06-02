@@ -113,6 +113,30 @@ const MemoryBoard = () => {
     const resetListener = () => {
       setFlips([]);
       setBoardLock(false);
+      setWaiting(false);
+    };
+
+    const upgradeTileListener = (
+      ...tiles: { value: string; index: number }[]
+    ) => {
+      // Set the value of the tiles to the new value
+      alert(JSON.stringify(tiles));
+      setTiles((previousTiles) => {
+        return previousTiles.map((tile, index) => {
+          if (tiles.some((t) => t.index === index)) {
+            return {
+              ...tile,
+              value: tiles.find((t) => t.index === index)!.value,
+            };
+          }
+          return tile;
+        });
+      });
+    };
+
+    const disconnectListener = () => {
+      setBoardLock(true);
+      setWaiting(true);
     };
 
     socket?.on("memory_board", memoryBoardListener);
@@ -122,6 +146,9 @@ const MemoryBoard = () => {
     socket?.on("turn", turnListener);
     socket?.on("game_reset", resetListener);
     socket?.on("remove_tiles", removeTilesListener);
+    socket?.on("upgrade_tile", upgradeTileListener);
+    socket?.on("room_joined", resetListener);
+    socket?.on("opponent_disconnected", disconnectListener);
 
     return () => {
       socket?.off("memory_board", memoryBoardListener);
@@ -131,6 +158,9 @@ const MemoryBoard = () => {
       socket?.off("turn", turnListener);
       socket?.off("game_reset", resetListener);
       socket?.off("remove_tiles", removeTilesListener);
+      socket?.off("upgrade_tile", upgradeTileListener);
+      socket?.off("room_joined", resetListener);
+      socket?.off("opponent_disconnected", disconnectListener);
     };
   }, [socket]);
 
@@ -156,7 +186,7 @@ const MemoryBoard = () => {
           id={`tile-${i}`}
           key={i}
         >
-          <div className="card-front"></div>
+          <div className="card-front">{import.meta.env.DEV && tile.value}</div>
           <div className="card-back">
             <ChessPiece piece={tile.value.toUpperCase()} />
           </div>

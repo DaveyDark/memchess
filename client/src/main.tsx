@@ -8,12 +8,12 @@ import { GameStateProvider } from "./context/GameStateProvider.tsx";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <SocketProvider>
-      <GameStateProvider>
-        <ToastProvider>
+    <ToastProvider>
+      <SocketProvider>
+        <GameStateProvider>
           <App />
-        </ToastProvider>
-      </GameStateProvider>
-    </SocketProvider>
+        </GameStateProvider>
+      </SocketProvider>
+    </ToastProvider>
   </React.StrictMode>,
 );
