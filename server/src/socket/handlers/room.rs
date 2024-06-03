@@ -67,6 +67,15 @@ pub async fn on_create_room(
             return;
         });
 
+    // Send player joined event to room
+    socket
+        .to(room_id.clone())
+        .emit("player_joined", socket.id.clone())
+        .unwrap_or_else(|e| {
+            error!("Error sending player_joined event: {:?}", e);
+            return;
+        });
+
     // Create a new room in the state
     let new_room = Room::new(
         socket.id.clone().to_string(),

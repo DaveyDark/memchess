@@ -71,20 +71,22 @@ impl MemoryBoard {
         }
     }
 
-    pub fn flip_tile(&mut self, index: usize) -> bool {
+    pub fn flip_tile(&mut self, index: usize) -> Option<String> {
         // Flips the tile at the given index
 
         // If 2 tiles are already flipped, do nothing
         // If the tile is already flipped, do nothing
         // If the tile is empty, do nothing
         if self.flips.len() == 2 || self.flips.contains(&index) || self.board[index].is_empty() {
-            return false;
+            return None;
         }
 
         // Add the index to the flips
         self.flips.push(index);
         self.board[index] += "_";
-        true
+
+        // Return the value of the flipped tile(without _)
+        Some(self.board[index].trim_matches('_').to_string())
     }
 
     pub fn match_tiles(&mut self) -> MatchedTiles {
@@ -236,5 +238,10 @@ impl MemoryBoard {
                 value: self.board[matches[t2]].clone(),
             },
         ))
+    }
+
+    pub fn reset_flips(&mut self) {
+        // Reset the flips
+        self.flips.clear();
     }
 }

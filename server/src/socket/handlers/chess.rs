@@ -47,6 +47,11 @@ pub async fn on_move_piece(
         }
     }
 
+    // Reset memory board flips
+    let mut memory_board = room.get_memory_board();
+    memory_board.reset_flips();
+    room.set_memory_board(memory_board);
+
     // Get Game Board
     let board = match room.get_chess_board() {
         Ok(board) => board,
@@ -80,6 +85,10 @@ pub async fn on_move_piece(
     }
     let from = from.unwrap();
     let to = to.unwrap();
+    let piece = board
+        .piece_on(from)
+        .unwrap()
+        .to_string(board.color_on(from).unwrap());
 
     let chess_move = chess::ChessMove::new(from, to, promotion);
 
@@ -94,10 +103,12 @@ pub async fn on_move_piece(
 
     // Check if the move is a capture
     let dest = chess_move.get_dest();
-    if let Some(piece) = board.piece_on(dest) {
+    let captured_piece = board
+        .piece_on(dest)
+        .map(|p| p.to_string(board.color_on(dest).unwrap()));
+    if let Some(capture) = captured_piece.clone() {
         // Capture
-        let color = board.color_on(dest).unwrap();
-        let capture = match piece.to_string(color).as_str() {
+        let capture = match capture.as_str() {
             "p" => "bp",
             "q" => "bq",
             "r" => "br",
@@ -194,7 +205,15 @@ pub async fn on_move_piece(
         // Emit the move to the opponent
         socket
             .within(room_id.clone())
-            .emit("piece_moved", _move)
+            .emit(
+                "piece_moved",
+                (
+                    _move,
+                    piece,
+                    captured_piece.unwrap_or(String::new()),
+                    socket.id.to_string(),
+                ),
+            )
             .unwrap_or_else(|e| error!("Failed to emit piece_moved event: {}", e));
         // Emit turn event
         let turn = room.get_turn();
@@ -246,11 +265,17 @@ pub async fn on_clear_square(
         }
     };
 
+    let board_square = Square::from_str(&square).unwrap();
+    let piece = board
+        .piece_on(board_square)
+        .unwrap()
+        .to_string(board.color_on(board_square).unwrap());
+
     // Convert to BoardBuilder
     let mut builder = BoardBuilder::from(board);
 
     // Remove corresponding piece from chess board
-    builder.clear_square(Square::from_str(&square).unwrap());
+    builder.clear_square(board_square);
 
     // Convert back to board
     let new_board: Result<chess::Board, _> = builder.try_into();
@@ -263,6 +288,6 @@ pub async fn on_clear_square(
 
     socket
         .within(room_id.clone())
-        .emit("square_cleared", square)
+        .emit("square_cleared", (square, piece, socket.id.to_string()))
         .unwrap_or_else(|e| error!("Failed to emit square_cleared event: {}", e));
 }

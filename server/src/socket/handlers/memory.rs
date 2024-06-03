@@ -27,11 +27,11 @@ pub async fn on_flip_tile(
             }
         }
         let board = room.get_mut_memory_board();
-        if board.flip_tile(index) {
+        if let Some(tile) = board.flip_tile(index) {
             // Tell the opponent that tile is flipped
             socket
                 .within(room_id.clone())
-                .emit("tile_flipped", index)
+                .emit("tile_flipped", (index, tile, socket.id.to_string()))
                 .unwrap_or_else(|e| error!("Failed to emit tile_flipped event: {}", e));
         }
     }
@@ -57,7 +57,7 @@ pub async fn on_match_tiles(socket: SocketRef, state: State<SocketState>) {
                 .unwrap_or_else(|e| error!("Failed to get tile: {}", e));
             socket
                 .within(room_id.clone())
-                .emit("tiles_matched", matched.get_matches())
+                .emit("tiles_matched", (matched, socket.id.to_string()))
                 .unwrap_or_else(|e| error!("Failed to emit tiles_matched event: {}", e));
         } else {
             socket
