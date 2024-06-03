@@ -5,9 +5,11 @@ import ChessPiece from "./ChessPiece";
 import {
   defaultMemoryBoard,
   fireConfettiOptions,
+  goldenConfettiOptions,
   matchConfettiOptions,
 } from "../constants";
 import confetti from "canvas-confetti";
+import { MatchedTiles } from "../types";
 
 type Tile = { value: string; flipped: boolean }[];
 
@@ -50,20 +52,23 @@ const MemoryBoard = () => {
 
   useEffect(() => {
     const memoryBoardListener = (board: any) => {
-      setTiles(
+      setTiles(() =>
         board.board.map((tile: string) => ({ value: tile, flipped: false })),
       );
     };
 
     const flipTileListener = (i: number) => {
-      setTiles((previousTiles) =>
-        previousTiles.map((tile, index) => {
+      setTiles((previousTiles) => {
+        if (previousTiles[i].value === "x")
+          handleConfetti(i, goldenConfettiOptions);
+
+        return previousTiles.map((tile, index) => {
           if (index === i) {
             return { ...tile, flipped: true };
           }
           return tile;
-        }),
-      );
+        });
+      });
     };
 
     const unflipTilesListener = (..._tiles: number[]) => {
@@ -77,16 +82,21 @@ const MemoryBoard = () => {
       });
     };
 
-    const matchTilesListener = (..._tiles: number[]) => {
+    const matchTilesListener = (_tiles: MatchedTiles) => {
+      let matches = _tiles.matches;
       setTiles((previousTiles) => {
+        matches.forEach((i) => {
+          if (previousTiles[i].value === "x")
+            handleConfetti(i, goldenConfettiOptions);
+          else handleConfetti(i);
+        });
         return previousTiles.map((tile, index) => {
-          if (_tiles.includes(index)) {
+          if (matches.includes(index)) {
             return { ...tile, value: "" };
           }
           return tile;
         });
       });
-      _tiles.forEach((i) => handleConfetti(i));
     };
 
     const turnListener = (player: string) => {
@@ -113,14 +123,12 @@ const MemoryBoard = () => {
     const resetListener = () => {
       setFlips([]);
       setBoardLock(false);
-      setWaiting(false);
     };
 
     const upgradeTileListener = (
       ...tiles: { value: string; index: number }[]
     ) => {
       // Set the value of the tiles to the new value
-      alert(JSON.stringify(tiles));
       setTiles((previousTiles) => {
         return previousTiles.map((tile, index) => {
           if (tiles.some((t) => t.index === index)) {
@@ -139,6 +147,16 @@ const MemoryBoard = () => {
       setWaiting(true);
     };
 
+    const pieceMovedListener = () => {
+      setFlips([]);
+      // Unflip all tiles
+      setTiles((previousTiles) => {
+        return previousTiles.map((tile) => {
+          return { ...tile, flipped: false };
+        });
+      });
+    };
+
     socket?.on("memory_board", memoryBoardListener);
     socket?.on("tile_flipped", flipTileListener);
     socket?.on("unflip_tiles", unflipTilesListener);
@@ -147,8 +165,8 @@ const MemoryBoard = () => {
     socket?.on("game_reset", resetListener);
     socket?.on("remove_tiles", removeTilesListener);
     socket?.on("upgrade_tile", upgradeTileListener);
-    socket?.on("room_joined", resetListener);
     socket?.on("opponent_disconnected", disconnectListener);
+    socket?.on("piece_moved", pieceMovedListener);
 
     return () => {
       socket?.off("memory_board", memoryBoardListener);
@@ -159,8 +177,8 @@ const MemoryBoard = () => {
       socket?.off("game_reset", resetListener);
       socket?.off("remove_tiles", removeTilesListener);
       socket?.off("upgrade_tile", upgradeTileListener);
-      socket?.off("room_joined", resetListener);
       socket?.off("opponent_disconnected", disconnectListener);
+      socket?.off("piece_moved", pieceMovedListener);
     };
   }, [socket]);
 

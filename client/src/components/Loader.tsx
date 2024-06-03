@@ -6,7 +6,7 @@ const Loader = () => {
         shadow-xl flex-col justify-center items-center gap-8"
       >
         <span className="loading loading-dots text-primary loading-lg"></span>
-        <h2 className="text-xl text-white font-semibold">
+        <h2 className="text-xl text-white font-semibold text-center">
           Connecting to the server...
         </h2>
       </div>

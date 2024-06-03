@@ -30,3 +30,22 @@ interface IUserInfo {
   player1: PlayerInfo | undefined;
   player2: PlayerInfo | undefined;
 }
+
+interface HistoryEntry {
+  player: string;
+  board: "memory" | "chess";
+  type: "flip" | "match" | "destroy" | "move" | "divider";
+  move: string;
+  moveDetail?: {
+    from: string;
+    to: string;
+    promotion: string;
+    piece: string;
+    capture?: string;
+  };
+}
+
+interface MatchedTiles {
+  tile: string;
+  matches: number[];
+}

@@ -31,6 +31,18 @@ const ChessPiece = ({ piece }: ChessPieceProps) => {
     WR: wr,
     WQ: wq,
     X: star,
+    B: wb,
+    b: bb,
+    K: wk,
+    k: bk,
+    N: wn,
+    n: bn,
+    P: wp,
+    p: bp,
+    Q: wq,
+    q: bq,
+    R: wr,
+    r: br,
   };
 
   return <img src={pieceMap[piece]} className="w-full aspect-square max-w-8" />;

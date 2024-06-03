@@ -11,6 +11,7 @@ import { useGameState } from "../context/GameStateProvider";
 import { useToaster } from "./toasts/ToastProvider";
 import { PIECE_MAP, fireConfettiOptions } from "../constants";
 import confetti from "canvas-confetti";
+import { Clock } from "react-feather";
 
 const ChessBoard = () => {
   const socket = useSocket();
@@ -62,7 +63,6 @@ const ChessBoard = () => {
       setGame(new Chess());
       setBoardLock(false);
       setSelectMode("");
-      setWaiting(false);
       setSquareHighlight([]);
     };
 
@@ -115,7 +115,6 @@ const ChessBoard = () => {
     socket?.on("select_piece", selectPieceListener);
     socket?.on("square_cleared", squareClearedListener);
     socket?.on("clear_failed", clearFailedListener);
-    socket?.on("room_joined", resetGameListener);
     socket?.on("opponent_disconnected", disconnectListener);
 
     return () => {
@@ -125,7 +124,6 @@ const ChessBoard = () => {
       socket?.off("select_piece", selectPieceListener);
       socket?.off("square_cleared", squareClearedListener);
       socket?.off("clear_failed", clearFailedListener);
-      socket?.off("room_joined", resetGameListener);
       socket?.off("opponent_disconnected", disconnectListener);
     };
   }, [socket]);
@@ -254,6 +252,15 @@ const ChessBoard = () => {
           isDraggablePiece={isMovable}
           position={game.fen()}
         />
+
+        {waiting || (
+          <label
+            className="absolute -top-4 -right-4 bg-primary text-white btn btn-circle"
+            htmlFor="drawer"
+          >
+            <Clock color="white" />
+          </label>
+        )}
       </div>
       {waiting && (
         <div

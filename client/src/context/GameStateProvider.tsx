@@ -30,6 +30,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const resetListener = () => {
+      if (gameState === "waiting") return;
       setGameState("ready");
     };
 

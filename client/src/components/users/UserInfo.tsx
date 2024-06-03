@@ -14,9 +14,9 @@ const UserInfo = () => {
     const roomJoinedListener = () => {
       socket!.emit("player_info");
     };
-    const playerInfoListener = (info: IUserInfo) => {
-      setInfo(info);
-      if (info.player1 && info.player2 && gameState === "waiting") {
+    const playerInfoListener = (newInfo: IUserInfo) => {
+      setInfo(newInfo);
+      if (newInfo.player1 && newInfo.player2 && gameState === "waiting") {
         setGameState("ready");
       }
     };

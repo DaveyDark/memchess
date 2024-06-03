@@ -227,6 +227,15 @@ export const matchConfettiOptions: ConfettiOptions = {
   colors: CONFETTI_COLORS,
 };
 
+export const goldenConfettiOptions: ConfettiOptions = {
+  particleCount: 50,
+  spread: 60,
+  startVelocity: 20,
+  gravity: 0.6,
+  shapes: ["square", "circle"],
+  colors: ["#f3d250"],
+};
+
 export const fireConfettiOptions: ConfettiOptions = {
   particleCount: 50,
   spread: 90,
