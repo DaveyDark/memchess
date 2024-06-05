@@ -33,6 +33,7 @@ pub async fn on_flip_tile(
                 .within(room_id.clone())
                 .emit("tile_flipped", (index, tile, socket.id.to_string()))
                 .unwrap_or_else(|e| error!("Failed to emit tile_flipped event: {}", e));
+            room.increment_turns();
         }
     }
 }

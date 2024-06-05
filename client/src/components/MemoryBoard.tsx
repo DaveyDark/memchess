@@ -53,7 +53,10 @@ const MemoryBoard = () => {
   useEffect(() => {
     const memoryBoardListener = (board: any) => {
       setTiles(() =>
-        board.board.map((tile: string) => ({ value: tile, flipped: false })),
+        board.board.map((tile: string) => ({
+          value: tile.replace("_", " ").trim(),
+          flipped: tile.charAt(tile.length - 1) === "_",
+        })),
       );
     };
 
@@ -142,11 +145,6 @@ const MemoryBoard = () => {
       });
     };
 
-    const disconnectListener = () => {
-      setBoardLock(true);
-      setWaiting(true);
-    };
-
     const pieceMovedListener = () => {
       setFlips([]);
       // Unflip all tiles
@@ -165,7 +163,6 @@ const MemoryBoard = () => {
     socket?.on("game_reset", resetListener);
     socket?.on("remove_tiles", removeTilesListener);
     socket?.on("upgrade_tile", upgradeTileListener);
-    socket?.on("opponent_disconnected", disconnectListener);
     socket?.on("piece_moved", pieceMovedListener);
 
     return () => {
@@ -177,7 +174,6 @@ const MemoryBoard = () => {
       socket?.off("game_reset", resetListener);
       socket?.off("remove_tiles", removeTilesListener);
       socket?.off("upgrade_tile", upgradeTileListener);
-      socket?.off("opponent_disconnected", disconnectListener);
       socket?.off("piece_moved", pieceMovedListener);
     };
   }, [socket]);
@@ -187,6 +183,9 @@ const MemoryBoard = () => {
       socket?.emit("get_memory_board");
       setWaiting(false);
       setBoardLock(false);
+    } else if (gameState === "playing") {
+      socket?.emit("get_memory_board");
+      setWaiting(false);
     } else if (gameState === "waiting") {
       setWaiting(true);
     }

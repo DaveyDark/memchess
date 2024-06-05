@@ -21,6 +21,7 @@ const ChessBoard = () => {
   const [game, setGame] = useState(new Chess());
   const [selectMode, setSelectMode] = useState("");
   const [squareHighlight, setSquareHighlight] = useState<Square[]>([]);
+  const [lastPosition, setLastPosition] = useState<string>(game.fen());
   const toast = useToaster();
 
   const handleConfetti = (sq: Square) => {
@@ -40,11 +41,18 @@ const ChessBoard = () => {
   };
 
   useEffect(() => {
+    const chessBoardListener = (fen: string) => {
+      setGame(new Chess(fen));
+      setSelectMode("");
+      setSquareHighlight([]);
+    };
+
     const turnListener = (player: string) => {
       setBoardLock(player !== socket!.id);
     };
 
     const pieceMovedListener = (data: { from: Square; to: Square }) => {
+      setLastPosition(game.fen());
       setGame((prev) => {
         try {
           const gameCopy = new Chess(prev.fen());
@@ -104,9 +112,8 @@ const ChessBoard = () => {
       });
     };
 
-    const disconnectListener = () => {
-      setBoardLock(true);
-      setWaiting(true);
+    const revertMoveListener = () => {
+      setGame(new Chess(lastPosition));
     };
 
     socket?.on("turn", turnListener);
@@ -115,7 +122,10 @@ const ChessBoard = () => {
     socket?.on("select_piece", selectPieceListener);
     socket?.on("square_cleared", squareClearedListener);
     socket?.on("clear_failed", clearFailedListener);
-    socket?.on("opponent_disconnected", disconnectListener);
+    socket?.on("chess_board", chessBoardListener);
+    socket?.on("illegal_move", revertMoveListener);
+    socket?.on("invalid_move", revertMoveListener);
+    socket?.on("illegal_fen", revertMoveListener);
 
     return () => {
       socket?.off("turn", turnListener);
@@ -124,14 +134,22 @@ const ChessBoard = () => {
       socket?.off("select_piece", selectPieceListener);
       socket?.off("square_cleared", squareClearedListener);
       socket?.off("clear_failed", clearFailedListener);
-      socket?.off("opponent_disconnected", disconnectListener);
+      socket?.off("chess_board", chessBoardListener);
+      socket?.off("illegal_move", revertMoveListener);
+      socket?.off("invalid_move", revertMoveListener);
+      socket?.off("illegal_fen", revertMoveListener);
     };
   }, [socket]);
 
   useEffect(() => {
     if (gameState === "waiting") {
       setWaiting(true);
-    } else {
+    } else if (gameState === "ready") {
+      socket?.emit("get_chess_board");
+      setWaiting(false);
+      setBoardLock(false);
+    } else if (gameState === "playing") {
+      socket?.emit("get_chess_board");
       setWaiting(false);
     }
   }, [gameState]);

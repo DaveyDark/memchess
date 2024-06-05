@@ -38,16 +38,23 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
       setGameState("waiting");
     };
 
+    const roomFullListener = (state: string) => {
+      if (state === "Playing") setGameState("playing");
+      else setGameState("ready");
+    };
+
     socket?.on("stalemate", mateListener);
     socket?.on("checkmate", mateListener);
     socket?.on("game_reset", resetListener);
     socket?.on("opponent_disconnected", disconnectListener);
+    socket?.on("room_full", roomFullListener);
 
     return () => {
       socket?.off("stalemate", mateListener);
       socket?.off("checkmate", mateListener);
       socket?.off("game_reset", resetListener);
       socket?.off("opponent_disconnected", disconnectListener);
+      socket?.off("room_full", roomFullListener);
     };
   }, [socket]);
 

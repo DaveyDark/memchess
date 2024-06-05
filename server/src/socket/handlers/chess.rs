@@ -43,6 +43,7 @@ pub async fn on_move_piece(
             // Start the game if the room is ready
             room.start_game(socket.id.clone().to_string());
         } else {
+            error!("Received move_piece event for non-playing room {}", room_id);
             return;
         }
     }
@@ -286,8 +287,31 @@ pub async fn on_clear_square(
         return;
     }
 
+    room.set_chess_board(new_board.unwrap());
+
     socket
         .within(room_id.clone())
         .emit("square_cleared", (square, piece, socket.id.to_string()))
         .unwrap_or_else(|e| error!("Failed to emit square_cleared event: {}", e));
+}
+
+pub async fn on_get_chess_board(socket: SocketRef, state: State<SocketState>) {
+    let room_id = get_data_from_extension(&socket);
+    if !room_id.is_empty() {
+        let room = state.get(room_id.clone()).await;
+        if room.is_none() {
+            error!("Room {} not found", room_id);
+            return;
+        }
+        let room = room.unwrap();
+        let board = room.get_chess_board();
+        if board.is_err() {
+            error!("Invalid chess board in room {}", room_id);
+            return;
+        }
+        let board = board.unwrap();
+        socket
+            .emit("chess_board", board.to_string())
+            .unwrap_or_else(|e| error!("Failed to emit chess_board event: {}", e));
+    }
 }

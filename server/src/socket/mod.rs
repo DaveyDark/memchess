@@ -32,6 +32,7 @@ pub async fn on_connect(socket: SocketRef) {
     // Chess Game Events
     socket.on("move_piece", handlers::chess::on_move_piece);
     socket.on("clear_square", handlers::chess::on_clear_square);
+    socket.on("get_chess_board", handlers::chess::on_get_chess_board);
 
     // Chat Events
     socket.on("chat", handlers::chat::on_chat);

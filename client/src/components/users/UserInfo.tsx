@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
 import UserCard from "./UserCard";
 import { useSocket } from "../../context/SocketProvider";
-import { useGameState } from "../../context/GameStateProvider";
 import { IUserInfo } from "../../types";
 
 const UserInfo = () => {
   const socket = useSocket();
-  const { gameState, setGameState } = useGameState();
   const [info, setInfo] = useState<IUserInfo>();
   const [turn, setTurn] = useState("");
 
@@ -16,9 +14,6 @@ const UserInfo = () => {
     };
     const playerInfoListener = (newInfo: IUserInfo) => {
       setInfo(newInfo);
-      if (newInfo.player1 && newInfo.player2 && gameState === "waiting") {
-        setGameState("ready");
-      }
     };
     const turnListener = (turn: string) => {
       setTurn(turn);
@@ -44,6 +39,10 @@ const UserInfo = () => {
       socket?.off("opponent_disconnected", disconnectListener);
     };
   }, [socket]);
+
+  useEffect(() => {
+    if (!info?.player1 && !info?.player2) socket?.emit("player_info");
+  }, [info]);
 
   return (
     <div className="border w-full p-4 rounded-lg border-primary">

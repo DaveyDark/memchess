@@ -61,7 +61,6 @@ impl Room {
         avatar_color: String,
     ) {
         // Add player p to the room
-        self.reset_game();
         self.p2 = Some(User::new(
             p,
             name,
@@ -70,7 +69,17 @@ impl Room {
             avatar_color,
             String::new(),
         ));
-        self.state = RoomState::Ready;
+
+        // Set turn to a valid value if it was set to the previous player
+        if !self.turn.is_empty() && self.turn != self.p1.as_ref().unwrap().get_id() {
+            self.turn = self.p2.as_ref().unwrap().get_id();
+        }
+
+        if self.turn_count == 0 {
+            self.state = RoomState::Ready;
+        } else {
+            self.state = RoomState::Playing;
+        }
     }
     pub fn start_game(&mut self, _p: String) {
         // Starts game with player _p
@@ -196,5 +205,9 @@ impl Room {
         } else {
             Some(p2.clone())
         }
+    }
+    pub fn increment_turns(&mut self) {
+        // Increments the turn count
+        self.turn_count += 1;
     }
 }

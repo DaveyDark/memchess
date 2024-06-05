@@ -3,7 +3,11 @@ use serde_json::json;
 use socketioxide::extract::{Data, SocketRef, State};
 use tracing::{error, info};
 
-use crate::{room::Room, socket::state::SocketState, util::get_data_from_extension};
+use crate::{
+    room::{Room, RoomState},
+    socket::state::SocketState,
+    util::get_data_from_extension,
+};
 
 // Struct to represent join_room params
 #[derive(Debug, Clone, serde::Deserialize)]
@@ -67,15 +71,6 @@ pub async fn on_create_room(
             return;
         });
 
-    // Send player joined event to room
-    socket
-        .to(room_id.clone())
-        .emit("player_joined", socket.id.clone())
-        .unwrap_or_else(|e| {
-            error!("Error sending player_joined event: {:?}", e);
-            return;
-        });
-
     // Create a new room in the state
     let new_room = Room::new(
         socket.id.clone().to_string(),
@@ -134,15 +129,35 @@ pub async fn on_join_room(
             data.avatar_orientation,
             data.avatar_color,
         );
-        state.update(room_id.clone(), room).await;
+        state.update(room_id.clone(), room.clone()).await;
 
         // Insert the room ID into the socket extensions for easy access
         socket.extensions.insert(room_id.clone());
+        //
+        // Emit turn event if the room is already playing
+        if room.get_state() == RoomState::Playing {
+            socket
+                .within(room_id.clone())
+                .emit("turn", room.get_turn().clone())
+                .unwrap_or_else(|e| {
+                    error!("Error sending turn event: {:?}", e);
+                    return;
+                });
+        }
 
         socket
             .emit("room_joined", room_id.clone())
             .unwrap_or_else(|e| {
                 error!("Error sending room_joined event: {:?}", e);
+                return;
+            });
+
+        // Send player joined event to room
+        socket
+            .within(room_id.clone())
+            .emit("room_full", room.get_state())
+            .unwrap_or_else(|e| {
+                error!("Error sending player_joined event: {:?}", e);
                 return;
             });
 
@@ -184,8 +199,8 @@ pub async fn on_leave_room(socket: SocketRef, state: State<SocketState>) {
         socket.leave(room_id.clone()).unwrap_or_else(|e| {
             error!("Error leaving room: {:?}", e);
         });
+        info!("Player {} left room {}", socket.id, room_id);
     }
-    info!("Player {} left room {}", socket.id, room_id);
 }
 
 pub async fn on_room_info(socket: SocketRef, state: State<SocketState>) {
