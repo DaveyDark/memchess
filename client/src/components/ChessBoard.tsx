@@ -22,6 +22,7 @@ const ChessBoard = () => {
   const [selectMode, setSelectMode] = useState("");
   const [squareHighlight, setSquareHighlight] = useState<Square[]>([]);
   const [lastPosition, setLastPosition] = useState<string>(game.fen());
+  const [check, setCheck] = useState<string>("x");
   const toast = useToaster();
 
   const handleConfetti = (sq: Square) => {
@@ -60,6 +61,20 @@ const ChessBoard = () => {
             ...data,
             promotion: "q",
           });
+
+          if (gameCopy.inCheck()) {
+            // Find square the king of the side in check is on
+            const kingSquare = gameCopy
+              .board()
+              .flat()
+              .find(
+                (sq) => sq?.type === "k" && sq?.color === gameCopy.turn(),
+              )?.square;
+            setCheck(kingSquare || "x");
+          } else {
+            setCheck("x");
+          }
+
           return gameCopy;
         } catch (e) {
           return prev;
@@ -260,7 +275,9 @@ const ChessBoard = () => {
               ...acc,
               [cur]: { backgroundColor: "#FF5861" },
             }),
-            {},
+            {
+              [check]: { backgroundColor: "#FF5861" },
+            },
           )}
           clearPremovesOnRightClick
           arePiecesDraggable={!boardLock}
