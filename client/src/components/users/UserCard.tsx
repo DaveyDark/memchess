@@ -40,7 +40,7 @@ const UserCard = ({
         >
           {username + (you ? " (You)" : "")}
         </h2>
-        {time && (
+        {time ? (
           <span className="countdown font-mono text-2xl">
             <span
               style={
@@ -56,6 +56,10 @@ const UserCard = ({
               }
             ></span>
           </span>
+        ) : (
+          <p className={`text-primary ${reverse || "text-right"}`}>
+            {turn ? "Your Turn" : "Waiting"}
+          </p>
         )}
       </div>
     </div>

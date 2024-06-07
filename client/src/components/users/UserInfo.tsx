@@ -24,6 +24,7 @@ const UserInfo = ({ roomType }: UserInfoProps) => {
     };
 
     const playerTimesListener = (...times: number[]) => {
+      if (roomType === "casual") return;
       setP1Time(times[0]);
       setP2Time(times[1]);
     };
@@ -33,6 +34,7 @@ const UserInfo = ({ roomType }: UserInfoProps) => {
     };
     const turnListener = (turn: string, times: number[]) => {
       setTurn(turn);
+      if (roomType === "casual") return;
       setP1Time(times[0]);
       setP2Time(times[1]);
     };
@@ -66,6 +68,7 @@ const UserInfo = ({ roomType }: UserInfoProps) => {
   }, [info]);
 
   useEffect(() => {
+    if (roomType === "casual") return;
     if (gameState !== "playing") {
       if (countdownRef.current) clearInterval(countdownRef.current);
     } else {
@@ -81,14 +84,15 @@ const UserInfo = ({ roomType }: UserInfoProps) => {
     return () => {
       if (countdownRef.current) clearInterval(countdownRef.current);
     };
-  }, [gameState, turn]);
+  }, [gameState, turn, roomType]);
 
   useEffect(() => {
+    if (roomType === "casual") return;
     if (p1Time <= 0 || p2Time <= 0) {
       clearInterval(countdownRef.current!);
       socket?.emit("timeout");
     }
-  }, [p1Time, p2Time]);
+  }, [p1Time, p2Time, roomType]);
 
   return (
     <div className="border w-full p-4 rounded-lg border-primary">
