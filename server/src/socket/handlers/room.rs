@@ -4,7 +4,7 @@ use socketioxide::extract::{Data, SocketRef, State};
 use tracing::{error, info};
 
 use crate::{
-    room::{Room, RoomState},
+    room::{Room, RoomState, RoomType},
     socket::state::SocketState,
     util::get_data_from_extension,
 };
@@ -25,6 +25,7 @@ pub struct CreateRoom {
     avatar: String,
     avatar_orientation: u8,
     avatar_color: String,
+    time: Option<u64>,
 }
 
 pub async fn on_create_room(
@@ -63,9 +64,15 @@ pub async fn on_create_room(
     // Insert the room ID into the socket extensions for easy access
     socket.extensions.insert(room_id.clone());
 
+    let room_type = if let Some(t) = p1.time {
+        RoomType::Timed(t)
+    } else {
+        RoomType::Casual
+    };
+
     // Send the generated room ID back to the client
     socket
-        .emit("room_joined", room_id.clone())
+        .emit("room_joined", (room_id.clone(), room_type.to_string()))
         .unwrap_or_else(|e| {
             error!("Error sending roomCreated event: {:?}", e);
             return;
@@ -78,6 +85,7 @@ pub async fn on_create_room(
         p1.avatar,
         p1.avatar_orientation,
         p1.avatar_color,
+        room_type,
     );
     info!("Created room {:?}", new_room.clone());
     state.add(room_id.clone(), new_room).await;
@@ -133,12 +141,15 @@ pub async fn on_join_room(
 
         // Insert the room ID into the socket extensions for easy access
         socket.extensions.insert(room_id.clone());
-        //
+
+        let turn = room.get_turn().unwrap_or(String::new());
+        let times = room.get_player_times().await;
+
         // Emit turn event if the room is already playing
         if room.get_state() == RoomState::Playing {
             socket
                 .within(room_id.clone())
-                .emit("turn", room.get_turn().clone())
+                .emit("turn", (turn, times))
                 .unwrap_or_else(|e| {
                     error!("Error sending turn event: {:?}", e);
                     return;
@@ -146,7 +157,10 @@ pub async fn on_join_room(
         }
 
         socket
-            .emit("room_joined", room_id.clone())
+            .emit(
+                "room_joined",
+                (room_id.clone(), room.get_type().to_string()),
+            )
             .unwrap_or_else(|e| {
                 error!("Error sending room_joined event: {:?}", e);
                 return;

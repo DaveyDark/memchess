@@ -39,6 +39,8 @@ pub async fn on_connect(socket: SocketRef) {
 
     // User Events
     socket.on("player_info", handlers::user::on_player_info);
+    socket.on("get_player_times", handlers::user::on_get_player_times);
+    socket.on("timeout", handlers::user::on_timeout);
 
     // Debug events
     socket.on("message", handlers::debug::on_message);

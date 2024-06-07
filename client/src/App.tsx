@@ -3,7 +3,7 @@ import ChessBoard from "./components/ChessBoard";
 import Header from "./components/Header";
 import MemoryBoard from "./components/MemoryBoard";
 import ChatBox from "./components/chat/ChatBox";
-import Auth from "./components/Auth";
+import Auth from "./components/auth/Auth";
 import { useEffect, useState } from "react";
 import { useSocket } from "./context/SocketProvider";
 import Loader from "./components/Loader";
@@ -14,10 +14,16 @@ import ControlsOverlay from "./components/overlays/ControlsOverlay";
 
 function App() {
   const [roomCode, setRoomCode] = useState("");
+  const [roomType, setRoomType] = useState<"casual" | "timed">("casual");
   const [isConnected, setIsConnected] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const { gameState } = useGameState();
   const socket = useSocket();
+
+  const setRoom = (code: string, type: "casual" | "timed") => {
+    setRoomCode(code);
+    setRoomType(type);
+  };
 
   useEffect(() => {
     const connectTimeout = setTimeout(() => {
@@ -46,7 +52,7 @@ function App() {
 
   return (
     <main className="font-quicksand w-screen h-screen flex flex-col items-center p-4 gap-5">
-      <Auth open={roomCode === ""} roomJoinedCallback={setRoomCode} />
+      <Auth open={roomCode === ""} roomJoinedCallback={setRoom} />
       <Header />
       <RoomCodeOverlay roomCode={roomCode} />
       <ControlsOverlay setRoomCode={setRoomCode} />
@@ -54,7 +60,7 @@ function App() {
       <div className="flex flex-col md:flex-row justify-center p-6 gap-8 my-auto h-fit rounded-lg w-full shadow-xl">
         {isLoaded && <ChessBoard />}
         <div className="flex flex-col min-w-[25vw] flex-[0.5] justify-between gap-4 items-center max-w-xs">
-          <UserInfo />
+          <UserInfo roomType={roomType} />
           <ChatBox />
         </div>
         <MemoryBoard />

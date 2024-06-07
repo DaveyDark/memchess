@@ -5,7 +5,7 @@ import Header from "./Header";
 import Avatar from "./users/Avatar";
 import { RotateCw } from "react-feather";
 import confetti from "canvas-confetti";
-import { CONFETTI_COLORS } from "../constants";
+import { gameOverConfettiOptions } from "../constants";
 
 const GameOver = ({ open }: { open: boolean }) => {
   const socket = useSocket();
@@ -23,12 +23,19 @@ const GameOver = ({ open }: { open: boolean }) => {
       setResult("Stalemate");
     };
 
+    const timeoutListener = (info: IUserInfo) => {
+      setPlayerInfo(info);
+      setResult("Timeout");
+    };
+
     socket?.on("checkmate", checkmateListener);
     socket?.on("stalemate", stalemateListener);
+    socket?.on("timeout", timeoutListener);
 
     return () => {
       socket?.off("checkmate", checkmateListener);
       socket?.off("stalemate", stalemateListener);
+      socket?.off("timeout", timeoutListener);
     };
   }, [socket]);
 
@@ -51,28 +58,19 @@ const GameOver = ({ open }: { open: boolean }) => {
         return clearInterval(interval);
       }
 
-      let particleCount = 50 * (timeLeft / duration);
       confetti({
-        particleCount,
-        startVelocity: 30,
-        spread: 360,
-        ticks: 60,
+        ...gameOverConfettiOptions,
         origin: {
           x: randomRange(0.1, 0.3),
           y: randomRange(0.1, 0.8),
         },
-        colors: CONFETTI_COLORS,
       });
       confetti({
-        particleCount,
-        startVelocity: 30,
-        spread: 360,
-        ticks: 60,
+        ...gameOverConfettiOptions,
         origin: {
           x: randomRange(0.7, 0.9),
           y: randomRange(0.1, 0.8),
         },
-        colors: CONFETTI_COLORS,
       });
     }, 250);
   };
@@ -99,9 +97,9 @@ const GameOver = ({ open }: { open: boolean }) => {
             </div>
             <div className="flex border-accent border rounded-lg pb-6 px-8 gap-4 pt-8">
               <div
-                className={`flex flex-col gap-2 relative ${result === "Checkmate" && "scale-125"}`}
+                className={`flex flex-col gap-2 relative ${result !== "Stalemate" && "scale-125"}`}
               >
-                {result === "Checkmate" && (
+                {result !== "Stalemate" && (
                   <p className="absolute -top-2 left-0 right-0 mx-auto w-fit bg-primary text-white z-10 text-xs p-0.5 rounded">
                     Winner
                   </p>
@@ -123,7 +121,7 @@ const GameOver = ({ open }: { open: boolean }) => {
                 VS
               </div>
               <div
-                className={`flex flex-col gap-2 ${result === "Checkmate" && "opacity-75"}`}
+                className={`flex flex-col gap-2 ${result !== "Stalemate" && "opacity-75"}`}
               >
                 <Avatar
                   avatar={

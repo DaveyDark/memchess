@@ -13,12 +13,13 @@ pub async fn on_flip_tile(
     if let Some(room) = state.rooms.write().await.get_mut(&room_id) {
         if room.get_state() != RoomState::Playing {
             if room.get_state() == RoomState::Ready {
-                room.start_game(socket.id.to_string());
+                room.start_game(socket.id.to_string()).await;
                 let turn = room.get_turn();
+                let times = room.get_player_times().await;
                 if let Some(turn) = turn {
                     socket
                         .within(room_id.clone())
-                        .emit("turn", turn)
+                        .emit("turn", (turn, times))
                         .unwrap_or_else(|e| error!("Failed to emit turn event: {}", e));
                 }
             } else {

@@ -26,10 +26,10 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
 
       if (import.meta.env.DEV) {
         _socket.onAny((event, ...args) => {
-          console.log(event, args);
+          console.log("Recieved: ", event, args);
         });
         _socket.onAnyOutgoing((event, ...args) => {
-          console.log(event, args);
+          console.log("Emitting: ", event, args);
         });
       }
 

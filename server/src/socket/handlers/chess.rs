@@ -17,8 +17,8 @@ pub struct Move {
 
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct GameResult {
-    player1: User,
-    player2: User,
+    pub player1: User,
+    pub player2: User,
 }
 
 pub async fn on_move_piece(
@@ -41,7 +41,7 @@ pub async fn on_move_piece(
     if room.get_state() != RoomState::Playing {
         if room.get_state() == RoomState::Ready {
             // Start the game if the room is ready
-            room.start_game(socket.id.clone().to_string());
+            room.start_game(socket.id.clone().to_string()).await;
         } else {
             error!("Received move_piece event for non-playing room {}", room_id);
             return;
@@ -201,7 +201,7 @@ pub async fn on_move_piece(
         room.end_game();
         state.update(room_id.clone(), room).await;
     } else {
-        room.switch_turn();
+        room.switch_turn().await;
         state.update(room_id.clone(), room.clone()).await;
         // Emit the move to the opponent
         socket
@@ -218,10 +218,11 @@ pub async fn on_move_piece(
             .unwrap_or_else(|e| error!("Failed to emit piece_moved event: {}", e));
         // Emit turn event
         let turn = room.get_turn();
+        let times = room.get_player_times().await;
         if let Some(turn) = turn {
             socket
                 .within(room_id.clone())
-                .emit("turn", turn)
+                .emit("turn", (turn, times))
                 .unwrap_or_else(|e| error!("Failed to emit turn event: {}", e));
         }
     }
@@ -247,7 +248,7 @@ pub async fn on_clear_square(
     if room.get_state() != RoomState::Playing {
         if room.get_state() == RoomState::Ready {
             // Start the game if the room is ready
-            room.start_game(socket.id.clone().to_string());
+            room.start_game(socket.id.clone().to_string()).await;
         } else {
             return;
         }

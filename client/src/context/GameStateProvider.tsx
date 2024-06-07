@@ -25,7 +25,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
   const socket = useSocket();
 
   useEffect(() => {
-    const mateListener = () => {
+    const gameOverListener = () => {
       setGameState("over");
     };
 
@@ -43,18 +43,32 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
       else setGameState("ready");
     };
 
-    socket?.on("stalemate", mateListener);
-    socket?.on("checkmate", mateListener);
+    const turnListener = () => {
+      setGameState("playing");
+    };
+
+    const gameResetListener = () => {
+      setGameState("ready");
+    };
+
+    socket?.on("stalemate", gameOverListener);
+    socket?.on("checkmate", gameOverListener);
+    socket?.on("timeout", gameOverListener);
     socket?.on("game_reset", resetListener);
     socket?.on("opponent_disconnected", disconnectListener);
     socket?.on("room_full", roomFullListener);
+    socket?.on("turn", turnListener);
+    socket?.on("game_reset", gameResetListener);
 
     return () => {
-      socket?.off("stalemate", mateListener);
-      socket?.off("checkmate", mateListener);
+      socket?.off("stalemate", gameOverListener);
+      socket?.off("checkmate", gameOverListener);
+      socket?.off("timeout", gameOverListener);
       socket?.off("game_reset", resetListener);
       socket?.off("opponent_disconnected", disconnectListener);
       socket?.off("room_full", roomFullListener);
+      socket?.off("turn", turnListener);
+      socket?.off("game_reset", gameResetListener);
     };
   }, [socket]);
 

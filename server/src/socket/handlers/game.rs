@@ -7,7 +7,7 @@ pub async fn on_reset_game(socket: SocketRef, state: State<SocketState>) {
     // Reset the game state
     let room_id = get_data_from_extension(&socket);
     if let Some(mut room) = state.get(room_id.clone()).await {
-        room.reset_game();
+        room.reset_game().await;
         state.update(room_id.clone(), room.clone()).await;
         socket
             .within(room_id.clone())

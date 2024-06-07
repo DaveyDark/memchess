@@ -7,9 +7,17 @@ interface UserCardProps {
   turn: boolean;
   reverse?: boolean;
   you?: boolean;
+  time?: number;
 }
 
-const UserCard = ({ username, avatar, turn, reverse, you }: UserCardProps) => {
+const UserCard = ({
+  username,
+  avatar,
+  turn,
+  reverse,
+  you,
+  time,
+}: UserCardProps) => {
   if (!username)
     return (
       <div className="flex w-full justify-between text-center py-4">
@@ -32,9 +40,23 @@ const UserCard = ({ username, avatar, turn, reverse, you }: UserCardProps) => {
         >
           {username + (you ? " (You)" : "")}
         </h2>
-        <p className={`text-primary ${reverse || "text-right"}`}>
-          {turn ? "Your Turn" : "Waiting"}
-        </p>
+        {time && (
+          <span className="countdown font-mono text-2xl">
+            <span
+              style={
+                // @ts-ignore
+                { "--value": Math.floor(time / 60) }
+              }
+            ></span>
+            :
+            <span
+              style={
+                // @ts-ignore
+                { "--value": time % 60 }
+              }
+            ></span>
+          </span>
+        )}
       </div>
     </div>
   );

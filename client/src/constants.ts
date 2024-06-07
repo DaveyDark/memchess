@@ -245,6 +245,14 @@ export const fireConfettiOptions: ConfettiOptions = {
   colors: CONFETTI_COLORS,
 };
 
+export const gameOverConfettiOptions = {
+  particleCount: 50,
+  startVelocity: 30,
+  spread: 360,
+  ticks: 60,
+  colors: CONFETTI_COLORS,
+};
+
 export const PIECE_MAP = {
   bq: "Black Queen",
   bk: "Black King",

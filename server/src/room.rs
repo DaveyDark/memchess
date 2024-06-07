@@ -12,6 +12,21 @@ pub enum RoomState {
     Over,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum RoomType {
+    Casual,
+    Timed(u64),
+}
+
+impl ToString for RoomType {
+    fn to_string(&self) -> String {
+        match self {
+            RoomType::Casual => "casual".to_string(),
+            RoomType::Timed(_) => "timed".to_string(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Room {
     // Stores all the information about a room
@@ -22,6 +37,7 @@ pub struct Room {
     turn: String,
     turn_count: u32,
     state: RoomState,
+    room_type: RoomType,
 }
 
 impl Room {
@@ -31,7 +47,13 @@ impl Room {
         avatar: String,
         avatar_orientation: u8,
         avatar_color: String,
+        room_type: RoomType,
     ) -> Self {
+        let time = if let RoomType::Timed(t) = room_type {
+            t
+        } else {
+            0
+        };
         let p1 = User::new(
             id,
             name,
@@ -39,6 +61,7 @@ impl Room {
             avatar_orientation,
             avatar_color,
             String::new(),
+            time,
         );
 
         // Create a new room with the given id as player 1
@@ -50,6 +73,7 @@ impl Room {
             turn: String::new(),
             turn_count: 0,
             state: RoomState::Waiting,
+            room_type,
         }
     }
     pub fn connect_player(
@@ -60,6 +84,7 @@ impl Room {
         avatar_orientation: u8,
         avatar_color: String,
     ) {
+        let time = self.get_time();
         // Add player p to the room
         self.p2 = Some(User::new(
             p,
@@ -68,6 +93,7 @@ impl Room {
             avatar_orientation,
             avatar_color,
             String::new(),
+            time,
         ));
 
         // Set turn to a valid value if it was set to the previous player
@@ -81,7 +107,7 @@ impl Room {
             self.state = RoomState::Playing;
         }
     }
-    pub fn start_game(&mut self, _p: String) {
+    pub async fn start_game(&mut self, _p: String) {
         // Starts game with player _p
         self.state = RoomState::Playing;
         if self.p1.is_none() || self.p2.is_none() {
@@ -92,9 +118,11 @@ impl Room {
         if p1.get_id() == _p {
             p1.set_chess_color("white".to_string());
             p2.set_chess_color("black".to_string());
+            p1.start_turn().await;
         } else {
             p1.set_chess_color("black".to_string());
             p2.set_chess_color("white".to_string());
+            p2.start_turn().await;
         }
         self.turn = _p;
     }
@@ -107,13 +135,23 @@ impl Room {
         // Stop game
         self.state = RoomState::Waiting;
     }
-    pub fn reset_game(&mut self) {
+    pub async fn reset_game(&mut self) {
         // Reset the game to it's initial state
         self.chess_fen = chess::Board::default().to_string();
         self.memory_board = MemoryBoard::new();
         self.turn = String::new();
         self.turn_count = 0;
         self.state = RoomState::Ready;
+
+        // Reset player times
+        if self.room_type == RoomType::Casual {
+            return;
+        }
+        let time = self.get_time();
+        let p1 = self.p1.as_mut().unwrap();
+        let p2 = self.p2.as_mut().unwrap();
+        p1.reset_time(time).await;
+        p2.reset_time(time).await;
     }
     pub fn get_state(&self) -> RoomState {
         // Returns the state of the room
@@ -138,17 +176,21 @@ impl Room {
             None
         }
     }
-    pub fn switch_turn(&mut self) {
+    pub async fn switch_turn(&mut self) {
         // Switches the turn to the other player
         if self.state != RoomState::Playing {
             return;
         }
-        let p1 = self.p1.as_ref().unwrap();
-        let p2 = self.p2.as_ref().unwrap();
+        let p1 = self.p1.as_mut().unwrap();
+        let p2 = self.p2.as_mut().unwrap();
         if self.turn == p1.get_id() {
+            p1.end_turn().await;
             self.turn = p2.get_id();
+            p2.start_turn().await;
         } else {
+            p2.end_turn().await;
             self.turn = p1.get_id();
+            p1.start_turn().await;
         }
         self.turn_count += 1;
     }
@@ -209,5 +251,32 @@ impl Room {
     pub fn increment_turns(&mut self) {
         // Increments the turn count
         self.turn_count += 1;
+    }
+    pub fn get_time(&self) -> u64 {
+        if let RoomType::Timed(t) = self.room_type {
+            t
+        } else {
+            0
+        }
+    }
+    pub async fn get_player_times(&self) -> (u64, u64) {
+        // Returns the time for both players
+        let p1 = self.p1.as_ref();
+        let p2 = self.p2.as_ref();
+        let p1_time = if p1.is_some() {
+            p1.unwrap().get_time().await
+        } else {
+            0
+        };
+        let p2_time = if p2.is_some() {
+            p2.unwrap().get_time().await
+        } else {
+            0
+        };
+        (p1_time, p2_time)
+    }
+    pub fn get_type(&self) -> RoomType {
+        // Returns the room type
+        self.room_type.clone()
     }
 }

@@ -1,25 +1,44 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import UserCard from "./UserCard";
 import { useSocket } from "../../context/SocketProvider";
 import { IUserInfo } from "../../types";
+import { useGameState } from "../../context/GameStateProvider";
 
-const UserInfo = () => {
+interface UserInfoProps {
+  roomType: "casual" | "timed";
+}
+
+const UserInfo = ({ roomType }: UserInfoProps) => {
   const socket = useSocket();
   const [info, setInfo] = useState<IUserInfo>();
   const [turn, setTurn] = useState("");
+  const [p1Time, setP1Time] = useState(0);
+  const [p2Time, setP2Time] = useState(0);
+  const { gameState } = useGameState();
+  const countdownRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const roomJoinedListener = () => {
       socket!.emit("player_info");
+      socket!.emit("get_player_times");
     };
+
+    const playerTimesListener = (...times: number[]) => {
+      setP1Time(times[0]);
+      setP2Time(times[1]);
+    };
+
     const playerInfoListener = (newInfo: IUserInfo) => {
       setInfo(newInfo);
     };
-    const turnListener = (turn: string) => {
+    const turnListener = (turn: string, times: number[]) => {
       setTurn(turn);
+      setP1Time(times[0]);
+      setP2Time(times[1]);
     };
     const resetListener = () => {
       setTurn("");
+      socket!.emit("get_player_times");
     };
     const disconnectListener = () => {
       socket!.emit("player_info");
@@ -30,6 +49,7 @@ const UserInfo = () => {
     socket?.on("turn", turnListener);
     socket?.on("game_reset", resetListener);
     socket?.on("opponent_disconnected", disconnectListener);
+    socket?.on("player_times", playerTimesListener);
 
     return () => {
       socket?.off("room_joined", roomJoinedListener);
@@ -37,12 +57,38 @@ const UserInfo = () => {
       socket?.off("turn", turnListener);
       socket?.off("game_reset", resetListener);
       socket?.off("opponent_disconnected", disconnectListener);
+      socket?.off("player_times", playerTimesListener);
     };
   }, [socket]);
 
   useEffect(() => {
     if (!info?.player1 && !info?.player2) socket?.emit("player_info");
   }, [info]);
+
+  useEffect(() => {
+    if (gameState !== "playing") {
+      if (countdownRef.current) clearInterval(countdownRef.current);
+    } else {
+      countdownRef.current = setInterval(() => {
+        if (turn === info?.player1?.id) {
+          setP1Time((prev) => prev - 1);
+        } else if (turn === info?.player2?.id) {
+          setP2Time((prev) => prev - 1);
+        }
+      }, 1000);
+    }
+
+    return () => {
+      if (countdownRef.current) clearInterval(countdownRef.current);
+    };
+  }, [gameState, turn]);
+
+  useEffect(() => {
+    if (p1Time <= 0 || p2Time <= 0) {
+      clearInterval(countdownRef.current!);
+      socket?.emit("timeout");
+    }
+  }, [p1Time, p2Time]);
 
   return (
     <div className="border w-full p-4 rounded-lg border-primary">
@@ -56,6 +102,7 @@ const UserInfo = () => {
             avatar: info.player1.avatar,
           }
         }
+        time={roomType === "timed" ? p1Time : undefined}
         turn={turn == info?.player1?.id}
       />
       <div className="divider divider-accent">VS</div>
@@ -70,6 +117,7 @@ const UserInfo = () => {
         }
         you={socket?.id === info?.player2?.id}
         turn={turn == info?.player2?.id}
+        time={roomType === "timed" ? p2Time : undefined}
         reverse
       />
     </div>

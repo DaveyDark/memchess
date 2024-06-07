@@ -1,15 +1,16 @@
 import { Key, User } from "react-feather";
-import Header from "./Header";
+import Header from "../Header";
 import { useEffect, useReducer, useState } from "react";
-import { useToaster } from "./toasts/ToastProvider";
-import AvatarCreator from "./users/AvatarCreator";
-import { AVATAR_COLORS } from "../constants";
-import { IAvatar } from "../types";
-import { useSocket } from "../context/SocketProvider";
+import { useToaster } from "../toasts/ToastProvider";
+import AvatarCreator from "./AvatarCreator";
+import { AVATAR_COLORS } from "../../constants";
+import { IAvatar } from "../../types";
+import { useSocket } from "../../context/SocketProvider";
+import RoomType from "./RoomType";
 
 interface AuthProps {
   open: boolean;
-  roomJoinedCallback: (roomCode: string) => void;
+  roomJoinedCallback: (roomCode: string, roomType: "casual" | "timed") => void;
 }
 
 const avatarReducer = (state: IAvatar, action: any) => {
@@ -32,6 +33,7 @@ const Auth = ({ open, roomJoinedCallback }: AuthProps) => {
   const toast = useToaster();
   const [username, setUsername] = useState("");
   const [roomCode, setRoomCode] = useState("");
+  const [roomTime, setRoomTime] = useState(10);
   const [avatar, avatarDispatch] = useReducer<
     (state: IAvatar, action: string) => IAvatar
   >(avatarReducer, {
@@ -94,13 +96,17 @@ const Auth = ({ open, roomJoinedCallback }: AuthProps) => {
       avatar: avatar.avatar,
       avatar_orientation: avatar.rotation,
       avatar_color: avatar.color,
+      time: roomTime * 60,
     });
   };
 
   useEffect(() => {
-    socket?.on("room_joined", (roomCode: string) => {
-      roomJoinedCallback(roomCode);
-    });
+    socket?.on(
+      "room_joined",
+      (roomCode: string, roomType: "casual" | "timed") => {
+        roomJoinedCallback(roomCode, roomType);
+      },
+    );
     socket?.on("join_failed", (reason: string) => {
       toast({
         content: reason,
@@ -163,12 +169,15 @@ const Auth = ({ open, roomJoinedCallback }: AuthProps) => {
               <div className="divider divider-accent my-2 font-light text-primary">
                 OR
               </div>
-              <button
-                className="btn btn-primary w-full text-white grow"
-                onClick={createRoom}
-              >
-                Create Room
-              </button>
+              <div className="flex flex-col gap-2 items-center">
+                <RoomType roomTime={roomTime} setRoomTime={setRoomTime} />
+                <button
+                  className="btn btn-primary w-full text-white grow"
+                  onClick={createRoom}
+                >
+                  Create Room
+                </button>
+              </div>
             </div>
           </div>
         </div>
