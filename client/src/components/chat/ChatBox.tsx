@@ -21,7 +21,13 @@ const ChatBox = () => {
         text: chat,
         side: author === socket!.id ? "right" : "left",
       };
-      setChats((prevChats) => [...prevChats, _chat]);
+      // Limit chat to 50 messages
+      setChats((prevChats) => {
+        if (prevChats.length >= 49) {
+          prevChats.shift();
+        }
+        return [...prevChats, _chat];
+      });
     };
 
     socket?.on("chat", chatListener);

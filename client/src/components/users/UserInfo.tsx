@@ -61,7 +61,7 @@ const UserInfo = ({ roomType }: UserInfoProps) => {
       socket?.off("opponent_disconnected", disconnectListener);
       socket?.off("player_times", playerTimesListener);
     };
-  }, [socket]);
+  }, [socket, roomType]);
 
   useEffect(() => {
     if (!info?.player1 && !info?.player2) socket?.emit("player_info");
@@ -69,6 +69,7 @@ const UserInfo = ({ roomType }: UserInfoProps) => {
 
   useEffect(() => {
     if (roomType === "casual") return;
+    if (!info?.player1 || !info?.player2) return;
     if (gameState !== "playing") {
       if (countdownRef.current) clearInterval(countdownRef.current);
     } else {
@@ -84,10 +85,11 @@ const UserInfo = ({ roomType }: UserInfoProps) => {
     return () => {
       if (countdownRef.current) clearInterval(countdownRef.current);
     };
-  }, [gameState, turn, roomType]);
+  }, [gameState, turn, roomType, info]);
 
   useEffect(() => {
     if (roomType === "casual") return;
+    if (gameState !== "playing") return;
     if (p1Time <= 0 || p2Time <= 0) {
       clearInterval(countdownRef.current!);
       socket?.emit("timeout");

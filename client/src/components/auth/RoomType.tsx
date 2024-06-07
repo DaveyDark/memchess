@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Moon, Watch } from "react-feather";
 
 interface RoomTypeProps {
@@ -8,6 +8,12 @@ interface RoomTypeProps {
 
 const RoomType = ({ roomTime, setRoomTime }: RoomTypeProps) => {
   const [roomType, setRoomType] = useState<"casual" | "timed">("casual");
+
+  useEffect(() => {
+    if (roomType === "casual") {
+      setRoomTime(-1);
+    }
+  }, [roomType]);
 
   return (
     <div className="w-full">

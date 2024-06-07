@@ -96,7 +96,7 @@ const Auth = ({ open, roomJoinedCallback }: AuthProps) => {
       avatar: avatar.avatar,
       avatar_orientation: avatar.rotation,
       avatar_color: avatar.color,
-      time: roomTime,
+      time: roomTime > 0 ? roomTime * 60 : undefined,
     });
   };
 

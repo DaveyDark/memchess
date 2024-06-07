@@ -40,8 +40,10 @@ const UserCard = ({
         >
           {username + (you ? " (You)" : "")}
         </h2>
-        {time ? (
-          <span className="countdown font-mono text-2xl">
+        {time !== undefined ? (
+          <span
+            className={`countdown font-mono text-2xl ${time < 60 && "text-error"}`}
+          >
             <span
               style={
                 // @ts-ignore
