@@ -279,4 +279,23 @@ impl Room {
         // Returns the room type
         self.room_type.clone()
     }
+    pub async fn timeout(&self) -> bool {
+        // Returns true if a player has run out of time
+        let p1 = self.p1.as_ref();
+        let p2 = self.p2.as_ref();
+        if p1.is_none() || p2.is_none() || self.room_type == RoomType::Casual {
+            return false;
+        }
+        let p1_time = if p1.is_some() {
+            p1.unwrap().get_time().await
+        } else {
+            0
+        };
+        let p2_time = if p2.is_some() {
+            p2.unwrap().get_time().await
+        } else {
+            0
+        };
+        p1_time == 0 || p2_time == 0
+    }
 }

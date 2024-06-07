@@ -63,12 +63,13 @@ pub async fn on_timeout(socket: SocketRef, state: State<SocketState>) {
     }
 
     let room = room.unwrap();
-    let times = room.get_player_times().await;
 
     // Check if both players have time left
-    if times.0 > 0 && times.1 > 0 {
+    if !room.timeout().await {
         return;
     }
+
+    let times = room.get_player_times().await;
 
     // Get player data
     let players = room.get_players();

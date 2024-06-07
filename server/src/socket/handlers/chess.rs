@@ -8,6 +8,8 @@ use crate::{
     room::RoomState, socket::state::SocketState, user::User, util::get_data_from_extension,
 };
 
+use super::user::on_timeout;
+
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 pub struct Move {
     from: String,
@@ -36,6 +38,11 @@ pub async fn on_move_piece(
         return;
     }
     let mut room = room.unwrap();
+
+    if room.timeout().await {
+        on_timeout(socket, state).await;
+        return;
+    }
 
     // If room is inactive
     if room.get_state() != RoomState::Playing {
