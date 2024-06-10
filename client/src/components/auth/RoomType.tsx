@@ -48,6 +48,13 @@ const RoomType = ({ roomTime, setRoomTime }: RoomTypeProps) => {
       >
         <a
           role="tab"
+          className={`tab ${roomTime === 5 && "tab-active"}`}
+          onClick={() => setRoomTime(5)}
+        >
+          <p className="font-semibold text-white">5m</p>
+        </a>
+        <a
+          role="tab"
           className={`tab ${roomTime === 10 && "tab-active"}`}
           onClick={() => setRoomTime(10)}
         >
@@ -59,13 +66,6 @@ const RoomType = ({ roomTime, setRoomTime }: RoomTypeProps) => {
           onClick={() => setRoomTime(15)}
         >
           <p className="font-semibold text-white">15m</p>
-        </a>
-        <a
-          role="tab"
-          className={`tab ${roomTime === 20 && "tab-active"}`}
-          onClick={() => setRoomTime(20)}
-        >
-          <p className="font-semibold text-white">20m</p>
         </a>
         <a
           role="tab"

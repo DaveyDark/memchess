@@ -23,6 +23,8 @@ const ChessBoard = () => {
   const [squareHighlight, setSquareHighlight] = useState<Square[]>([]);
   const [lastPosition, setLastPosition] = useState<string>(game.fen());
   const [check, setCheck] = useState<string>("x");
+  // TODO: Add sound effects
+  // const moveSound = new Audio();
   const toast = useToaster();
 
   const handleConfetti = (sq: Square) => {
