@@ -28,14 +28,21 @@ const GameOver = ({ open }: { open: boolean }) => {
       setResult("Timeout");
     };
 
+    const gameOverListener = (info: IUserInfo) => {
+      setPlayerInfo(info);
+      setResult("Game Over!");
+    };
+
     socket?.on("checkmate", checkmateListener);
     socket?.on("stalemate", stalemateListener);
     socket?.on("timeout", timeoutListener);
+    socket?.on("game_over", gameOverListener);
 
     return () => {
       socket?.off("checkmate", checkmateListener);
       socket?.off("stalemate", stalemateListener);
       socket?.off("timeout", timeoutListener);
+      socket?.off("game_over", gameOverListener);
     };
   }, [socket]);
 

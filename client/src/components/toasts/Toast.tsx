@@ -11,11 +11,11 @@ const Toast = ({ duration, type, content }: ToastProps) => {
   const self = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const toastTImeout = setTimeout(() => {
+    const toastTimeout = setTimeout(() => {
       self.current?.remove();
     }, duration);
 
-    return () => clearTimeout(toastTImeout);
+    return () => clearTimeout(toastTimeout);
   }, []);
 
   switch (type) {

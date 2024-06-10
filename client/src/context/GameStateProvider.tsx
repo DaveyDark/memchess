@@ -54,6 +54,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
     socket?.on("stalemate", gameOverListener);
     socket?.on("checkmate", gameOverListener);
     socket?.on("timeout", gameOverListener);
+    socket?.on("game_over", gameOverListener);
     socket?.on("game_reset", resetListener);
     socket?.on("opponent_disconnected", disconnectListener);
     socket?.on("room_full", roomFullListener);
@@ -64,6 +65,7 @@ export const GameStateProvider = ({ children }: { children: ReactNode }) => {
       socket?.off("stalemate", gameOverListener);
       socket?.off("checkmate", gameOverListener);
       socket?.off("timeout", gameOverListener);
+      socket?.off("game_over", gameOverListener);
       socket?.off("game_reset", resetListener);
       socket?.off("opponent_disconnected", disconnectListener);
       socket?.off("room_full", roomFullListener);

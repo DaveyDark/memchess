@@ -24,6 +24,7 @@ interface PlayerInfo {
   avatar_orientation: number;
   avatar_color: string;
   chess_color: string;
+  connected: boolean;
 }
 
 interface IUserInfo {

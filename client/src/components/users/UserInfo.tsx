@@ -109,6 +109,7 @@ const UserInfo = ({ roomType }: UserInfoProps) => {
           }
         }
         time={roomType === "timed" ? p1Time : undefined}
+        connected={info?.player1?.connected}
         turn={turn == info?.player1?.id}
       />
       <div className="divider divider-accent">VS</div>
@@ -124,6 +125,7 @@ const UserInfo = ({ roomType }: UserInfoProps) => {
         you={socket?.id === info?.player2?.id}
         turn={turn == info?.player2?.id}
         time={roomType === "timed" ? p2Time : undefined}
+        connected={info?.player2?.connected}
         reverse
       />
     </div>

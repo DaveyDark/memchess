@@ -8,6 +8,7 @@ interface UserCardProps {
   reverse?: boolean;
   you?: boolean;
   time?: number;
+  connected?: boolean;
 }
 
 const UserCard = ({
@@ -17,6 +18,7 @@ const UserCard = ({
   reverse,
   you,
   time,
+  connected,
 }: UserCardProps) => {
   if (!username)
     return (
@@ -32,7 +34,7 @@ const UserCard = ({
       className={`flex w-full justify-between ${reverse && "flex-row-reverse"} items-center px-2`}
     >
       <div>
-        <Avatar avatar={avatar} turn={turn} />
+        <Avatar avatar={avatar} turn={turn} connected={connected} />
       </div>
       <div className="flex flex-col h-full justify-center">
         <h2
@@ -60,7 +62,7 @@ const UserCard = ({
           </span>
         ) : (
           <p className={`text-primary ${reverse || "text-right"}`}>
-            {turn ? "Your Turn" : "Waiting"}
+            {connected ? (turn ? "Your Turn" : "Waiting") : "Disconnected"}
           </p>
         )}
       </div>

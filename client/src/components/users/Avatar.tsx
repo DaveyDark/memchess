@@ -1,3 +1,4 @@
+import { X } from "react-feather";
 import { IAvatar } from "../../types";
 
 const RotationClasses = ["rotate-0", "rotate-90", "rotate-180", "-rotate-90"];
@@ -5,9 +6,10 @@ const RotationClasses = ["rotate-0", "rotate-90", "rotate-180", "-rotate-90"];
 interface AvatarProps {
   avatar: IAvatar | undefined;
   turn?: boolean;
+  connected?: boolean;
 }
 
-const Avatar = ({ avatar, turn }: AvatarProps) => {
+const Avatar = ({ avatar, turn, connected }: AvatarProps) => {
   if (!avatar) return null;
 
   return (
@@ -21,12 +23,22 @@ const Avatar = ({ avatar, turn }: AvatarProps) => {
         value={avatar.avatar}
         maxLength={3}
       />
-      {turn && (
-        <div
-          className="aspect-square rounded-full bg-primary absolute 
+      {connected ? (
+        turn && (
+          <div
+            className="aspect-square rounded-full bg-primary absolute 
           border-2 border-white
           -top-1.5 -right-1.5 w-4 p-1"
-        ></div>
+          ></div>
+        )
+      ) : (
+        <div
+          className="aspect-square rounded-full bg-error absolute 
+          border-2 border-white
+          -top-1.5 -right-1.5"
+        >
+          <X color="white" size={16} />
+        </div>
       )}
     </div>
   );
