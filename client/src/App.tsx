@@ -59,7 +59,7 @@ function App() {
       <GameOver open={gameState === "over"} />
       <div className="flex flex-col md:flex-row justify-center p-6 gap-8 my-auto h-fit rounded-lg w-full shadow-xl">
         {isLoaded && <ChessBoard />}
-        <div className="flex flex-col min-w-[25vw] flex-[0.5] justify-between gap-4 items-center max-w-xs">
+        <div className="flex flex-col min-w-[25vw] md:flex-[0.5] justify-between gap-4 items-center md:max-w-xs">
           <UserInfo roomType={roomType} />
           <ChatBox />
         </div>

@@ -24,7 +24,7 @@ const Avatar = ({ avatar, turn }: AvatarProps) => {
       {turn && (
         <div
           className="aspect-square rounded-full bg-primary absolute 
-          border-2 border-white z-10
+          border-2 border-white
           -top-1.5 -right-1.5 w-4 p-1"
         ></div>
       )}

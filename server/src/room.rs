@@ -85,6 +85,26 @@ impl Room {
         avatar_color: String,
     ) {
         let time = self.get_time();
+
+        if self.p1.is_none() {
+            // Add player p to the room
+            self.p1 = Some(User::new(
+                p,
+                name,
+                avatar,
+                avatar_orientation,
+                avatar_color,
+                String::new(),
+                time,
+            ));
+            //
+            // Set turn to a valid value if it was set to the previous player
+            if !self.turn.is_empty() {
+                self.turn = self.p1.as_ref().unwrap().get_id();
+            }
+
+            return;
+        }
         // Add player p to the room
         self.p2 = Some(User::new(
             p,

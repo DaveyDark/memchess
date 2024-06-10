@@ -149,7 +149,6 @@ impl MemoryBoard {
             MatchedTiles::new_empty()
         }
     }
-
     fn find_matching_tile(&self, index: usize) -> Option<usize> {
         // Find the matching tile for the given index
         let tile = self.board[index].trim_matches('_');

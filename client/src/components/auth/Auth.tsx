@@ -31,16 +31,23 @@ const avatarReducer = (state: IAvatar, action: any) => {
 const Auth = ({ open, roomJoinedCallback }: AuthProps) => {
   const socket = useSocket();
   const toast = useToaster();
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState(
+    localStorage.getItem("username") || "",
+  );
   const [roomCode, setRoomCode] = useState("");
   const [roomTime, setRoomTime] = useState(10);
   const [avatar, avatarDispatch] = useReducer<
     (state: IAvatar, action: string) => IAvatar
-  >(avatarReducer, {
-    color: AVATAR_COLORS[0],
-    rotation: 0,
-    avatar: "",
-  });
+  >(
+    avatarReducer,
+    localStorage.getItem("avatar")
+      ? JSON.parse(localStorage.getItem("avatar") as string)
+      : {
+          avatar: "",
+          color: AVATAR_COLORS[0],
+          rotation: 0,
+        },
+  );
 
   const joinRoom = () => {
     if (username.length === 0) {
@@ -66,6 +73,8 @@ const Auth = ({ open, roomJoinedCallback }: AuthProps) => {
         avatar_orientation: avatar.rotation,
         avatar_color: avatar.color,
       });
+      localStorage.setItem("avatar", JSON.stringify(avatar));
+      localStorage.setItem("username", username);
     } else {
       toast({
         content: "Room code must be 6 characters long",
@@ -98,6 +107,8 @@ const Auth = ({ open, roomJoinedCallback }: AuthProps) => {
       avatar_color: avatar.color,
       time: roomTime > 0 ? roomTime * 60 : undefined,
     });
+    localStorage.setItem("avatar", JSON.stringify(avatar));
+    localStorage.setItem("username", username);
   };
 
   useEffect(() => {

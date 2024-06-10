@@ -104,7 +104,7 @@ const ControlsOverlay = ({
           <ul className="list-disc list-inside">
             <li>
               If you know the locations of a pair of cards of your color, you
-              can match them but not remove any piece to gain an advantage ny
+              can match them but not remove any piece to gain an advantage and
               essentially removing the cards for one of your pieces.
             </li>
             <li>

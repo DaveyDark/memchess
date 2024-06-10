@@ -119,17 +119,18 @@ pub async fn on_join_room(
 
     // Check if the room exists and has only one player
     info!("Player {} is trying to join room {}", socket.id, room_id);
-    if socket.within(room_id.clone()).sockets().unwrap().len() == 1 {
+
+    let players = socket.within(room_id.clone()).sockets().unwrap().len();
+    let room = state.get(room_id.clone()).await;
+    if room.is_some() && players <= 1 {
+        let mut room = room.unwrap();
+
         // Add the second player to the room
         socket.join(room_id.clone()).unwrap_or_else(|e| {
             error!("Error joining room: {:?}", e);
             return;
         });
         // Update the state to add the second player to the room
-        let mut room = state
-            .get(room_id.clone())
-            .await
-            .expect("Expected room to exist");
         room.connect_player(
             socket.id.to_string(),
             data.name,
@@ -146,7 +147,7 @@ pub async fn on_join_room(
         let times = room.get_player_times().await;
 
         // Emit turn event if the room is already playing
-        if room.get_state() == RoomState::Playing {
+        if players == 1 && room.get_state() == RoomState::Playing {
             socket
                 .within(room_id.clone())
                 .emit("turn", (turn, times))
@@ -167,13 +168,15 @@ pub async fn on_join_room(
             });
 
         // Send player joined event to room
-        socket
-            .within(room_id.clone())
-            .emit("room_full", room.get_state())
-            .unwrap_or_else(|e| {
-                error!("Error sending player_joined event: {:?}", e);
-                return;
-            });
+        if players == 1 {
+            socket
+                .within(room_id.clone())
+                .emit("room_full", room.get_state())
+                .unwrap_or_else(|e| {
+                    error!("Error sending player_joined event: {:?}", e);
+                    return;
+                });
+        }
 
         info!("Player {} joined room {}", socket.id, &room_id);
     } else {

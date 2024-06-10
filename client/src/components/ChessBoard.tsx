@@ -61,20 +61,6 @@ const ChessBoard = () => {
             ...data,
             promotion: "q",
           });
-
-          if (gameCopy.inCheck()) {
-            // Find square the king of the side in check is on
-            const kingSquare = gameCopy
-              .board()
-              .flat()
-              .find(
-                (sq) => sq?.type === "k" && sq?.color === gameCopy.turn(),
-              )?.square;
-            setCheck(kingSquare || "x");
-          } else {
-            setCheck("x");
-          }
-
           return gameCopy;
         } catch (e) {
           return prev;
@@ -127,10 +113,6 @@ const ChessBoard = () => {
       });
     };
 
-    const revertMoveListener = () => {
-      setGame(new Chess(lastPosition));
-    };
-
     socket?.on("turn", turnListener);
     socket?.on("piece_moved", pieceMovedListener);
     socket?.on("game_reset", resetGameListener);
@@ -138,9 +120,6 @@ const ChessBoard = () => {
     socket?.on("square_cleared", squareClearedListener);
     socket?.on("clear_failed", clearFailedListener);
     socket?.on("chess_board", chessBoardListener);
-    socket?.on("illegal_move", revertMoveListener);
-    socket?.on("invalid_move", revertMoveListener);
-    socket?.on("illegal_fen", revertMoveListener);
 
     return () => {
       socket?.off("turn", turnListener);
@@ -150,11 +129,38 @@ const ChessBoard = () => {
       socket?.off("square_cleared", squareClearedListener);
       socket?.off("clear_failed", clearFailedListener);
       socket?.off("chess_board", chessBoardListener);
-      socket?.off("illegal_move", revertMoveListener);
-      socket?.off("invalid_move", revertMoveListener);
-      socket?.off("illegal_fen", revertMoveListener);
     };
   }, [socket]);
+
+  useEffect(() => {
+    // Set Check if there is a check
+    if (game.isCheck()) {
+      const checkSq = game
+        .board()
+        .flat()
+        .find((sq) => sq?.type === "k" && sq?.color === game.turn())?.square;
+      if (!checkSq) return;
+      setCheck(checkSq);
+    } else {
+      setCheck("x");
+    }
+  }, [game]);
+
+  useEffect(() => {
+    const revertMoveListener = () => {
+      setGame(new Chess(lastPosition));
+
+      socket?.on("illegal_move", revertMoveListener);
+      socket?.on("invalid_move", revertMoveListener);
+      socket?.on("illegal_fen", revertMoveListener);
+
+      return () => {
+        socket?.off("illegal_move", revertMoveListener);
+        socket?.off("invalid_move", revertMoveListener);
+        socket?.off("illegal_fen", revertMoveListener);
+      };
+    };
+  }, [socket, lastPosition]);
 
   useEffect(() => {
     if (gameState === "waiting") {
@@ -253,6 +259,7 @@ const ChessBoard = () => {
     if (selectMode === "x") {
       if (piece.toLowerCase() === "k") return;
       socket!.emit("clear_square", square);
+      socket!.emit("match_piece", piece.toLowerCase());
       return;
     }
     if (piece.toUpperCase() == selectMode.substring(0, 2).toUpperCase()) {

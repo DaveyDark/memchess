@@ -64,6 +64,7 @@ pub async fn on_move_piece(
     let board = match room.get_chess_board() {
         Ok(board) => board,
         Err(_) => {
+            error!("Invalid chess board in room {}", room_id);
             // Emit Error if chess fen is illegal/corrupt
             socket
                 .within(room_id)
@@ -295,7 +296,10 @@ pub async fn on_clear_square(
         return;
     }
 
-    room.set_chess_board(new_board.unwrap());
+    let new_board = new_board.unwrap();
+    room.set_chess_board(new_board);
+
+    state.update(room_id.clone(), room.clone()).await;
 
     socket
         .within(room_id.clone())

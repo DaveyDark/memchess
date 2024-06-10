@@ -1,4 +1,5 @@
 use socketioxide::extract::{SocketRef, State};
+use tokio::time::{sleep, Duration};
 use tracing::{error, info};
 
 use crate::{socket::state::SocketState, util::get_data_from_extension};
@@ -28,6 +29,7 @@ pub async fn on_connect(socket: SocketRef) {
     socket.on("flip_tile", handlers::memory::on_flip_tile);
     socket.on("match_tiles", handlers::memory::on_match_tiles);
     socket.on("get_memory_board", handlers::memory::on_get_memory_board);
+    socket.on("match_piece", handlers::memory::on_match_piece);
 
     // Chess Game Events
     socket.on("move_piece", handlers::chess::on_move_piece);
@@ -61,12 +63,18 @@ pub async fn on_disconnect(socket: SocketRef, state: State<SocketState>) {
                 error!("Error sending disconnection event: {:?}", e);
             });
         room.disconnect_player(socket.id.to_string());
+        state.update(room_id.clone(), room.clone()).await;
         if room.player_count() == 0 {
-            // If the room is empty, remove it from the state
-            state.remove(room_id.clone()).await;
-        } else {
-            // Otherwise, update the state with the new room data
-            state.update(room_id.clone(), room).await;
+            // If the room is empty, wait 1 minute before removing it from the state
+            sleep(Duration::from_secs(60)).await;
+            // If the room is still empty after 1 minute, remove it from the state
+            let room = state.get(room_id.clone()).await;
+            if let Some(room) = room {
+                if room.player_count() == 0 {
+                    state.remove(room_id.clone()).await;
+                    info!("Room {} removed", room_id);
+                }
+            }
         }
     }
     info!("Player {} disconnected", socket.id);

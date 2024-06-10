@@ -1,7 +1,10 @@
 use socketioxide::extract::{Data, SocketRef, State};
 use tracing::error;
 
-use crate::{room::RoomState, socket::state::SocketState, util::get_data_from_extension};
+use crate::{
+    memory::board::MatchedTiles, room::RoomState, socket::state::SocketState,
+    util::get_data_from_extension,
+};
 
 pub async fn on_flip_tile(
     socket: SocketRef,
@@ -78,5 +81,31 @@ pub async fn on_get_memory_board(socket: SocketRef, state: State<SocketState>) {
         socket
             .emit("memory_board", board)
             .unwrap_or_else(|e| error!("Failed to emit memory_board event: {}", e));
+    }
+}
+
+pub async fn on_match_piece(
+    socket: SocketRef,
+    state: State<SocketState>,
+    Data(piece): Data<String>,
+) {
+    let room_id = get_data_from_extension(&socket);
+
+    if let Some(room) = state.rooms.write().await.get_mut(&room_id) {
+        if room.get_state() != RoomState::Playing {
+            error!(
+                "Received match_piece event for non-playing room {}",
+                room_id
+            );
+            return;
+        }
+        // Remove 2 tiles corresponding to the given piece
+        let board = room.get_mut_memory_board();
+        let matches = board.remove_tiles(piece.clone());
+        let matched = MatchedTiles::new(piece, matches);
+        socket
+            .within(room_id.clone())
+            .emit("tiles_matched", (matched, socket.id.to_string()))
+            .unwrap_or_else(|e| error!("Failed to emit remove_tiles event: {}", e));
     }
 }

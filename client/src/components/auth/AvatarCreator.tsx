@@ -32,7 +32,7 @@ const AvatarCreator = ({ avatar, avatarDispatch }: AvatarCreatorProps) => {
   };
 
   useEffect(() => {
-    randomize();
+    if (avatar.avatar === "") randomize();
   }, []);
 
   return (
