@@ -11,6 +11,7 @@ pub struct User {
     avatar_orientation: u8,
     avatar_color: String,
     chess_color: String,
+    connected: bool,
     #[serde(skip)]
     time: Arc<Mutex<u64>>, // time left in seconds
     #[serde(skip)]
@@ -34,6 +35,7 @@ impl User {
             avatar_orientation,
             avatar_color,
             chess_color,
+            connected: true,
             time: Arc::new(Mutex::new(initial_time)),
             timer_handle: Arc::new(Mutex::new(None)),
         }
@@ -87,5 +89,31 @@ impl User {
 
     pub async fn reset_time(&self, time: u64) {
         *self.time.lock().await = time;
+    }
+
+    pub fn disconnect(&mut self) {
+        self.connected = false;
+    }
+
+    pub fn is_connected(&self) -> bool {
+        self.connected
+    }
+
+    pub fn reconnect(&mut self, id: String) {
+        self.connected = true;
+        self.id = id;
+    }
+
+    pub fn matches(
+        &self,
+        name: &String,
+        avatar: &String,
+        avatar_orientation: &u8,
+        avatar_color: &String,
+    ) -> bool {
+        self.name == *name
+            && self.avatar == *avatar
+            && self.avatar_orientation == *avatar_orientation
+            && self.avatar_color == *avatar_color
     }
 }

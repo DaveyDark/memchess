@@ -65,8 +65,8 @@ pub async fn on_disconnect(socket: SocketRef, state: State<SocketState>) {
         room.disconnect_player(socket.id.to_string());
         state.update(room_id.clone(), room.clone()).await;
         if room.player_count() == 0 {
-            // If the room is empty, wait 1 minute before removing it from the state
-            sleep(Duration::from_secs(60)).await;
+            // If the room is empty, wait 5 minutes before removing it from the state
+            sleep(Duration::from_secs(300)).await;
             // If the room is still empty after 1 minute, remove it from the state
             let room = state.get(room_id.clone()).await;
             if let Some(room) = room {

@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use chess::{BoardBuilder, Piece, Square};
+use chess::{BoardBuilder, Color, Piece, Square};
 use socketioxide::extract::{Data, SocketRef, State};
 use tracing::error;
 
@@ -165,7 +165,36 @@ pub async fn on_move_piece(
     room.set_chess_board(new_board);
 
     // Check for game end
-    if new_board.status() == chess::BoardStatus::Stalemate {
+    if let Some(winner) = room.check_win() {
+        let (p1, p2) = room.get_players();
+        let p1 = p1.unwrap();
+        let p2 = p2.unwrap();
+
+        let winner = match winner {
+            Color::White => "White",
+            Color::Black => "Black",
+        };
+
+        let result = if p1.get_chess_color() == winner {
+            GameResult {
+                player1: p1,
+                player2: p2,
+            }
+        } else {
+            GameResult {
+                player1: p2,
+                player2: p1,
+            }
+        };
+
+        socket
+            .within(room_id.clone())
+            .emit("game_over", result)
+            .unwrap_or_else(|e| error!("Failed to emit game_over event: {}", e));
+        room.end_game();
+        state.update(room_id.clone(), room).await;
+        return;
+    } else if new_board.status() == chess::BoardStatus::Stalemate {
         // Stalemate
         let players = room.get_players();
         if players.0.is_none() || players.1.is_none() {
@@ -300,6 +329,38 @@ pub async fn on_clear_square(
     room.set_chess_board(new_board);
 
     state.update(room_id.clone(), room.clone()).await;
+
+    // Check for game end
+    if let Some(winner) = room.check_win() {
+        let (p1, p2) = room.get_players();
+        let p1 = p1.unwrap();
+        let p2 = p2.unwrap();
+
+        let winner = match winner {
+            Color::White => "White",
+            Color::Black => "Black",
+        };
+
+        let result = if p1.get_chess_color() == winner {
+            GameResult {
+                player1: p1,
+                player2: p2,
+            }
+        } else {
+            GameResult {
+                player1: p2,
+                player2: p1,
+            }
+        };
+
+        socket
+            .within(room_id.clone())
+            .emit("game_over", result)
+            .unwrap_or_else(|e| error!("Failed to emit game_over event: {}", e));
+        room.end_game();
+        state.update(room_id.clone(), room).await;
+        return;
+    }
 
     socket
         .within(room_id.clone())

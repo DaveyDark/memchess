@@ -147,7 +147,7 @@ pub async fn on_join_room(
         let times = room.get_player_times().await;
 
         // Emit turn event if the room is already playing
-        if players == 1 && room.get_state() == RoomState::Playing {
+        if room.player_count() == 2 && room.get_state() == RoomState::Playing {
             socket
                 .within(room_id.clone())
                 .emit("turn", (turn, times))

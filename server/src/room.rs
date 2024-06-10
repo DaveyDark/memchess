@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+use chess::Color;
 use serde::{Deserialize, Serialize};
 
 use crate::{memory::board::MemoryBoard, user::User};
@@ -86,39 +87,69 @@ impl Room {
     ) {
         let time = self.get_time();
 
-        if self.p1.is_none() {
-            // Add player p to the room
-            self.p1 = Some(User::new(
-                p,
-                name,
-                avatar,
+        let p1 = self.p1.as_mut().unwrap();
+        let mut old_id = String::new();
+
+        // Check if the player matches p1 and is trying to reconnect
+        if p1.matches(&name, &avatar, &avatar_orientation, &avatar_color) && !p1.is_connected() {
+            old_id = p1.get_id();
+            p1.reconnect(p.clone());
+        } else if self.p2.is_none() {
+            // If p2 is empty, add the player as p2
+            self.p2 = Some(User::new(
+                p.clone(),
+                name.clone(),
+                avatar.clone(),
                 avatar_orientation,
-                avatar_color,
+                avatar_color.clone(),
                 String::new(),
                 time,
             ));
-            //
-            // Set turn to a valid value if it was set to the previous player
-            if !self.turn.is_empty() {
-                self.turn = self.p1.as_ref().unwrap().get_id();
-            }
+        } else {
+            // If p2 is not empty, check if the player is trying to reconnect as p2
+            let p2 = self.p2.as_mut().unwrap();
 
+            if !p2.is_connected() && p2.matches(&name, &avatar, &avatar_orientation, &avatar_color)
+            {
+                old_id = p2.get_id();
+                p2.reconnect(p.clone());
+            } else {
+                // Determine which player slot to reassign based on connection status
+                if p1.is_connected() {
+                    // If p1 is connected, reassign p2
+                    old_id = p2.get_id();
+                    self.p2 = Some(User::new(
+                        p.clone(),
+                        name.clone(),
+                        avatar.clone(),
+                        avatar_orientation,
+                        avatar_color.clone(),
+                        String::new(),
+                        time,
+                    ));
+                } else {
+                    // If p1 is not connected, reassign p1
+                    old_id = p1.get_id();
+                    self.p1 = Some(User::new(
+                        p.clone(),
+                        name.clone(),
+                        avatar.clone(),
+                        avatar_orientation,
+                        avatar_color.clone(),
+                        String::new(),
+                        time,
+                    ));
+                }
+            }
+        }
+
+        // Set room state based on the number of connected players
+        if self.player_count() == 1 {
             return;
         }
-        // Add player p to the room
-        self.p2 = Some(User::new(
-            p,
-            name,
-            avatar,
-            avatar_orientation,
-            avatar_color,
-            String::new(),
-            time,
-        ));
 
-        // Set turn to a valid value if it was set to the previous player
-        if !self.turn.is_empty() && self.turn != self.p1.as_ref().unwrap().get_id() {
-            self.turn = self.p2.as_ref().unwrap().get_id();
+        if self.turn == old_id {
+            self.turn = p;
         }
 
         if self.turn_count == 0 {
@@ -149,9 +180,10 @@ impl Room {
     pub fn disconnect_player(&mut self, p: String) {
         // Remove player p from the room
         if p == self.p1.as_ref().unwrap().get_id() {
-            self.p1 = self.p2.clone();
+            self.p1.as_mut().unwrap().disconnect();
+        } else {
+            self.p2.as_mut().unwrap().disconnect();
         }
-        self.p2 = None;
         // Stop game
         self.state = RoomState::Waiting;
     }
@@ -180,10 +212,10 @@ impl Room {
     pub fn player_count(&self) -> u32 {
         // Returns the number of players in the room
         let mut count = 0;
-        if self.p1.is_some() {
+        if self.p1.is_some() && self.p1.as_ref().unwrap().is_connected() {
             count += 1;
         }
-        if self.p2.is_some() {
+        if self.p2.is_some() && self.p2.as_ref().unwrap().is_connected() {
             count += 1;
         }
         count
@@ -317,5 +349,27 @@ impl Room {
             0
         };
         p1_time == 0 || p2_time == 0
+    }
+
+    pub fn check_win(&self) -> Option<Color> {
+        // If one of the players only has a king left, the other player wins
+
+        let board = self.get_chess_board().unwrap();
+        let mut white = 0;
+        let mut black = 0;
+        for sq in *board.combined() {
+            if board.color_on(sq).unwrap() == Color::White {
+                white += 1;
+            } else {
+                black += 1;
+            }
+        }
+        if white == 1 {
+            return Some(Color::Black);
+        } else if black == 1 {
+            return Some(Color::White);
+        } else {
+            return None;
+        }
     }
 }
