@@ -1,9 +1,7 @@
 use socketioxide::extract::{SocketRef, State};
 use tracing::{error, warn};
 
-use crate::{socket::state::SocketState, util::get_data_from_extension};
-
-use super::chess::GameResult;
+use crate::{chess::util::GameResult, socket::state::SocketState, util::get_data_from_extension};
 
 pub async fn on_player_info(socket: SocketRef, state: State<SocketState>) {
     // Get room id and check if player is in a room
@@ -92,6 +90,7 @@ pub async fn on_timeout(socket: SocketRef, state: State<SocketState>) {
     let result = GameResult {
         player1: p1,
         player2: p2,
+        result: "timeout".to_string(),
     };
 
     socket

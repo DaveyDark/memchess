@@ -4,14 +4,16 @@ import {
   Square,
   Piece,
   PromotionPieceOption,
+  BoardOrientation,
 } from "react-chessboard/dist/chessboard/types";
 import { Chess } from "chess.js";
 import { useSocket } from "../context/SocketProvider";
 import { useGameState } from "../context/GameStateProvider";
-import { useToaster } from "./toasts/ToastProvider";
+import { useToaster } from "../context/ToastProvider";
 import { PIECE_MAP, fireConfettiOptions } from "../constants";
 import confetti from "canvas-confetti";
 import { Clock } from "react-feather";
+import { useSFX } from "../context/SFXProvider";
 
 const ChessBoard = () => {
   const socket = useSocket();
@@ -23,9 +25,9 @@ const ChessBoard = () => {
   const [squareHighlight, setSquareHighlight] = useState<Square[]>([]);
   const [lastPosition, setLastPosition] = useState<string>(game.fen());
   const [check, setCheck] = useState<string>("x");
-  // TODO: Add sound effects
-  // const moveSound = new Audio();
+  const [color, setColor] = useState<string>("white");
   const toast = useToaster();
+  const sfx = useSFX();
 
   const handleConfetti = (sq: Square) => {
     const tile = document.querySelector(`div[data-square="${sq}"]`);
@@ -54,11 +56,15 @@ const ChessBoard = () => {
       setBoardLock(player !== socket!.id);
     };
 
-    const pieceMovedListener = (data: { from: Square; to: Square }) => {
+    const pieceMovedListener = (
+      data: { from: Square; to: Square },
+      _: string,
+      captured: string,
+    ) => {
       setLastPosition(game.fen());
       setGame((prev) => {
+        const gameCopy = new Chess(prev.fen());
         try {
-          const gameCopy = new Chess(prev.fen());
           gameCopy.move({
             ...data,
             promotion: "q",
@@ -66,6 +72,14 @@ const ChessBoard = () => {
           return gameCopy;
         } catch (e) {
           return prev;
+        } finally {
+          if (gameCopy.isCheck()) {
+            sfx.play("check");
+          } else if (captured) {
+            sfx.play("capture");
+          } else {
+            sfx.play("move");
+          }
         }
       });
     };
@@ -75,6 +89,7 @@ const ChessBoard = () => {
       setBoardLock(false);
       setSelectMode("");
       setSquareHighlight([]);
+      sfx.play("slide");
     };
 
     const selectPieceListener = (piece: string) => {
@@ -105,6 +120,7 @@ const ChessBoard = () => {
       });
       setSelectMode("");
       handleConfetti(square);
+      sfx.play("confetti");
     };
 
     const clearFailedListener = () => {
@@ -115,6 +131,14 @@ const ChessBoard = () => {
       });
     };
 
+    const whiteListener = (id: string) => {
+      if (id == socket?.id) {
+        setColor("white");
+      } else {
+        setColor("black");
+      }
+    };
+
     socket?.on("turn", turnListener);
     socket?.on("piece_moved", pieceMovedListener);
     socket?.on("game_reset", resetGameListener);
@@ -122,6 +146,7 @@ const ChessBoard = () => {
     socket?.on("square_cleared", squareClearedListener);
     socket?.on("clear_failed", clearFailedListener);
     socket?.on("chess_board", chessBoardListener);
+    socket?.on("white", whiteListener);
 
     return () => {
       socket?.off("turn", turnListener);
@@ -131,6 +156,7 @@ const ChessBoard = () => {
       socket?.off("square_cleared", squareClearedListener);
       socket?.off("clear_failed", clearFailedListener);
       socket?.off("chess_board", chessBoardListener);
+      socket?.off("white", whiteListener);
     };
   }, [socket]);
 
@@ -295,6 +321,7 @@ const ChessBoard = () => {
           onPieceClick={selectPiece}
           isDraggablePiece={isMovable}
           position={game.fen()}
+          boardOrientation={color as BoardOrientation}
         />
 
         {waiting || (

@@ -6,11 +6,13 @@ import Avatar from "./users/Avatar";
 import { RotateCw } from "react-feather";
 import confetti from "canvas-confetti";
 import { gameOverConfettiOptions } from "../constants";
+import { useSFX } from "../context/SFXProvider";
 
 const GameOver = ({ open }: { open: boolean }) => {
   const socket = useSocket();
   const [playerInfo, setPlayerInfo] = useState<IUserInfo>();
   const [result, setResult] = useState("");
+  const sfx = useSFX();
 
   useEffect(() => {
     const checkmateListener = (info: IUserInfo) => {
@@ -51,7 +53,7 @@ const GameOver = ({ open }: { open: boolean }) => {
   };
 
   const handleConfetti = () => {
-    let duration = 10000;
+    let duration = 3000;
     let animationEnd = Date.now() + duration;
 
     const randomRange = (min: number, max: number) => {
@@ -79,12 +81,26 @@ const GameOver = ({ open }: { open: boolean }) => {
           y: randomRange(0.1, 0.8),
         },
       });
-    }, 250);
+      sfx.play("confetti");
+    }, 300);
   };
 
   useEffect(() => {
-    if (open) handleConfetti();
+    if (open && result !== "Stalemate") handleConfetti();
   }, [open]);
+
+  useEffect(() => {
+    if (open) {
+      if (result === "Stalemate") sfx.play("draw");
+      else {
+        if (playerInfo?.player1 && playerInfo?.player1.id === socket?.id) {
+          sfx.play("win");
+        } else {
+          sfx.play("lose");
+        }
+      }
+    }
+  }, [result, open]);
 
   if (!open) return null;
 
@@ -104,7 +120,7 @@ const GameOver = ({ open }: { open: boolean }) => {
             </div>
             <div className="flex border-accent border rounded-lg pb-6 px-8 gap-4 pt-8">
               <div
-                className={`flex flex-col gap-2 relative ${result !== "Stalemate" && "scale-125"}`}
+                className={`flex flex-col gap-2 relative ${result !== "Stalemate" && "scale-125"} items-center justify-center`}
               >
                 {result !== "Stalemate" && (
                   <p className="absolute -top-2 left-0 right-0 mx-auto w-fit bg-primary text-white z-10 text-xs p-0.5 rounded">
@@ -119,6 +135,7 @@ const GameOver = ({ open }: { open: boolean }) => {
                       avatar: playerInfo.player1.avatar,
                     }
                   }
+                  connected
                 />
                 <p className="text-center">
                   {playerInfo?.player1 && playerInfo?.player1.name}
@@ -128,7 +145,7 @@ const GameOver = ({ open }: { open: boolean }) => {
                 VS
               </div>
               <div
-                className={`flex flex-col gap-2 ${result !== "Stalemate" && "opacity-75"}`}
+                className={`flex flex-col gap-2 ${result !== "Stalemate" && "opacity-75"} items-center justify-center`}
               >
                 <Avatar
                   avatar={
@@ -138,6 +155,7 @@ const GameOver = ({ open }: { open: boolean }) => {
                       avatar: playerInfo.player2.avatar,
                     }
                   }
+                  connected
                 />
                 <p className="text-center">
                   {playerInfo?.player2 && playerInfo?.player2.name}

@@ -1,5 +1,5 @@
 import { Key } from "react-feather";
-import { useToaster } from "../toasts/ToastProvider";
+import { useToaster } from "../../context/ToastProvider";
 
 interface OverlayProps {
   roomCode: string;

@@ -1,12 +1,12 @@
 import { Key, User } from "react-feather";
 import Header from "../Header";
 import { useEffect, useReducer, useState } from "react";
-import { useToaster } from "../toasts/ToastProvider";
 import AvatarCreator from "./AvatarCreator";
 import { AVATAR_COLORS } from "../../constants";
 import { IAvatar } from "../../types";
 import { useSocket } from "../../context/SocketProvider";
 import RoomType from "./RoomType";
+import { useToaster } from "../../context/ToastProvider";
 
 interface AuthProps {
   open: boolean;

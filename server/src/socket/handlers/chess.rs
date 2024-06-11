@@ -1,27 +1,17 @@
 use std::str::FromStr;
 
-use chess::{BoardBuilder, Color, Piece, Square};
+use chess::{BoardBuilder, Piece, Square};
 use socketioxide::extract::{Data, SocketRef, State};
 use tracing::error;
 
 use crate::{
-    room::RoomState, socket::state::SocketState, user::User, util::get_data_from_extension,
+    chess::util::{is_game_over, Move},
+    room::RoomState,
+    socket::state::SocketState,
+    util::get_data_from_extension,
 };
 
 use super::user::on_timeout;
-
-#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
-pub struct Move {
-    from: String,
-    to: String,
-    promotion: String,
-}
-
-#[derive(Debug, Clone, serde::Serialize)]
-pub struct GameResult {
-    pub player1: User,
-    pub player2: User,
-}
 
 pub async fn on_move_piece(
     socket: SocketRef,
@@ -49,6 +39,10 @@ pub async fn on_move_piece(
         if room.get_state() == RoomState::Ready {
             // Start the game if the room is ready
             room.start_game(socket.id.clone().to_string()).await;
+            socket
+                .within(room_id.clone())
+                .emit("white", socket.id.to_string())
+                .unwrap_or_else(|e| error!("Failed to emit game_started event: {}", e));
         } else {
             error!("Received move_piece event for non-playing room {}", room_id);
             return;
@@ -165,78 +159,14 @@ pub async fn on_move_piece(
     room.set_chess_board(new_board);
 
     // Check for game end
-    if let Some(winner) = room.check_win() {
-        let (p1, p2) = room.get_players();
-        let p1 = p1.unwrap();
-        let p2 = p2.unwrap();
-
-        let winner = match winner {
-            Color::White => "White",
-            Color::Black => "Black",
-        };
-
-        let result = if p1.get_chess_color() == winner {
-            GameResult {
-                player1: p1,
-                player2: p2,
-            }
-        } else {
-            GameResult {
-                player1: p2,
-                player2: p1,
-            }
-        };
-
+    if let Some(result) = is_game_over(&new_board, &room) {
         socket
             .within(room_id.clone())
-            .emit("game_over", result)
-            .unwrap_or_else(|e| error!("Failed to emit game_over event: {}", e));
+            .emit(result.result.clone(), result)
+            .unwrap_or_else(|e| error!("Failed to emit event: {}", e));
         room.end_game();
         state.update(room_id.clone(), room).await;
         return;
-    } else if new_board.status() == chess::BoardStatus::Stalemate {
-        // Stalemate
-        let players = room.get_players();
-        if players.0.is_none() || players.1.is_none() {
-            error!("Missing player in room {}", room_id);
-            return;
-        }
-        let result = GameResult {
-            player1: players.0.unwrap(),
-            player2: players.1.unwrap(),
-        };
-        socket
-            .within(room_id.clone())
-            .emit("stalemate", result)
-            .unwrap_or_else(|e| error!("Failed to emit stalemate event: {}", e));
-        room.end_game();
-        state.update(room_id.clone(), room).await;
-    } else if new_board.status() == chess::BoardStatus::Checkmate {
-        // Checkmate
-        let white = room.get_white();
-        let black = room.get_black();
-        if white.is_none() || black.is_none() {
-            error!("Missing player in room {}", room_id);
-            return;
-        }
-        let white = white.unwrap();
-        let black = black.unwrap();
-        let winner = match new_board.side_to_move() {
-            chess::Color::Black => GameResult {
-                player1: black,
-                player2: white,
-            },
-            chess::Color::White => GameResult {
-                player1: white,
-                player2: black,
-            },
-        };
-        socket
-            .within(room_id.clone())
-            .emit("checkmate", winner)
-            .unwrap_or_else(|e| error!("Failed to emit checkmate event: {}", e));
-        room.end_game();
-        state.update(room_id.clone(), room).await;
     } else {
         room.switch_turn().await;
         state.update(room_id.clone(), room.clone()).await;
@@ -281,16 +211,6 @@ pub async fn on_clear_square(
     }
     let mut room = room.unwrap();
 
-    // If room is inactive
-    if room.get_state() != RoomState::Playing {
-        if room.get_state() == RoomState::Ready {
-            // Start the game if the room is ready
-            room.start_game(socket.id.clone().to_string()).await;
-        } else {
-            return;
-        }
-    }
-
     // Get Game Board
     let board = match room.get_chess_board() {
         Ok(board) => board,
@@ -331,34 +251,12 @@ pub async fn on_clear_square(
     state.update(room_id.clone(), room.clone()).await;
 
     // Check for game end
-    if let Some(winner) = room.check_win() {
-        let (p1, p2) = room.get_players();
-        let p1 = p1.unwrap();
-        let p2 = p2.unwrap();
-
-        let winner = match winner {
-            Color::White => "White",
-            Color::Black => "Black",
-        };
-
-        let result = if p1.get_chess_color() == winner {
-            GameResult {
-                player1: p1,
-                player2: p2,
-            }
-        } else {
-            GameResult {
-                player1: p2,
-                player2: p1,
-            }
-        };
-
+    if let Some(result) = is_game_over(&new_board, &room) {
         socket
             .within(room_id.clone())
-            .emit("game_over", result)
-            .unwrap_or_else(|e| error!("Failed to emit game_over event: {}", e));
+            .emit(result.result.clone(), result)
+            .unwrap_or_else(|e| error!("Failed to emit event: {}", e));
         room.end_game();
-        state.update(room_id.clone(), room).await;
         return;
     }
 

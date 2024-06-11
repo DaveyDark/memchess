@@ -17,6 +17,10 @@ pub async fn on_flip_tile(
         if room.get_state() != RoomState::Playing {
             if room.get_state() == RoomState::Ready {
                 room.start_game(socket.id.to_string()).await;
+                socket
+                    .within(room_id.clone())
+                    .emit("white", socket.id.to_string())
+                    .unwrap_or_else(|e| error!("Failed to emit game_started event: {}", e));
                 let turn = room.get_turn();
                 let times = room.get_player_times().await;
                 if let Some(turn) = turn {

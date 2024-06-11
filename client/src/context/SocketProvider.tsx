@@ -6,7 +6,7 @@ import {
   useState,
 } from "react";
 import io, { Socket } from "socket.io-client";
-import { useToaster } from "../components/toasts/ToastProvider";
+import { useToaster } from "./ToastProvider";
 
 const SocketContext = createContext<Socket | undefined>(undefined);
 

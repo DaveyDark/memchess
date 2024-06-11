@@ -10,6 +10,7 @@ import {
 } from "../constants";
 import confetti from "canvas-confetti";
 import { MatchedTiles } from "../types";
+import { useSFX } from "../context/SFXProvider";
 
 type Tile = { value: string; flipped: boolean }[];
 
@@ -20,6 +21,7 @@ const MemoryBoard = () => {
   const [waiting, setWaiting] = useState<boolean>(true);
   const socket = useSocket();
   const { gameState } = useGameState();
+  const sfx = useSFX();
 
   const flipTile = (i: number) => {
     if (boardLock) return;
@@ -72,6 +74,7 @@ const MemoryBoard = () => {
           return tile;
         });
       });
+      sfx.play("flip");
     };
 
     const unflipTilesListener = (..._tiles: number[]) => {
@@ -100,6 +103,7 @@ const MemoryBoard = () => {
           return tile;
         });
       });
+      sfx.play("confetti");
     };
 
     const turnListener = (player: string) => {

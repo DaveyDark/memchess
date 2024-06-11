@@ -6,6 +6,7 @@ use tracing::info;
 
 use socket::state::SocketState;
 
+mod chess;
 mod memory;
 mod room;
 mod socket;
