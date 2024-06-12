@@ -67,7 +67,7 @@ const ControlsOverlay = ({
         </div>
       </div>
       <dialog id="help_modal" className="modal" open={showHelp}>
-        <div className="modal-box w-11/2 max-w-2xl">
+        <div className="modal-box w-11/2 max-w-2xl no-scrollbar">
           <Header />
           <h2 className="font-semibold text-xl mt-6 mb-2">Rules</h2>
           <ul className="list-disc list-inside">
@@ -91,13 +91,23 @@ const ControlsOverlay = ({
               remove it, given that it does not invalidate the chess rules.
             </li>
             <li>
-              The game ends when a stalemate or checkmate is reached. In case of
-              a draw, the player with the most points(piece weights) wins.
-            </li>
-            <li>
               The memory board contains 4 wildcards, which can be matched with
               any card. Matching two wildcards allows the player to remove any
               piece from the board(except the king).
+            </li>
+          </ul>
+          <h2 className="font-semibold text-xl mt-6 mb-2">Winning the game</h2>
+          <p>The game ends when one of the following conditions are met:</p>
+          <ul className="list-disc list-inside">
+            <li>A checkmate occurs.</li>
+            <li>A stalemate occurs. This results in a draw</li>
+            <li>
+              All pieces of one player, except the king, are eliminated. The
+              other player is decalred as the winner.
+            </li>
+            <li>
+              (Only in timed mode) One of the players runs out of time. In this
+              case, the other player is declared winner.
             </li>
           </ul>
           <h2 className="font-semibold text-xl mt-6 mb-2">Tips</h2>

@@ -40,7 +40,7 @@ const playRandomSound = (event: string) => {
   const sounds = soundEffects[event];
   if (sounds && sounds.length > 0) {
     const randomIndex = Math.floor(Math.random() * sounds.length);
-    const howl = new Howl({ src: [sounds[randomIndex]] });
+    const howl = new Howl({ src: [sounds[randomIndex]], volume: 0.5 });
     howl.play();
   } else {
     console.warn(`No sound effects found for event: ${event}`);

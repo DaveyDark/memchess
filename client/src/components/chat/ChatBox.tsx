@@ -3,11 +3,13 @@ import Chat from "./Chat";
 import { useEffect, useRef, useState } from "react";
 import { IChat } from "../../types";
 import { useSocket } from "../../context/SocketProvider";
+import { useSFX } from "../../context/SFXProvider";
 
 const ChatBox = () => {
   const [chats, setChats] = useState<IChat[]>([]);
   const chatInput = useRef<HTMLInputElement>(null);
   const socket = useSocket();
+  const sfx = useSFX();
 
   useEffect(() => {
     const chatListener = ({
@@ -23,11 +25,12 @@ const ChatBox = () => {
       };
       // Limit chat to 50 messages
       setChats((prevChats) => {
-        if (prevChats.length >= 49) {
+        if (prevChats.length >= 50) {
           prevChats.shift();
         }
         return [...prevChats, _chat];
       });
+      sfx.play("alert");
     };
 
     socket?.on("chat", chatListener);

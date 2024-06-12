@@ -105,7 +105,7 @@ const GameOver = ({ open }: { open: boolean }) => {
   if (!open) return null;
 
   return (
-    <div className="absolute top-0 left-0 right-0 bottom-0 backdrop-blur z-50">
+    <div className="absolute top-0 left-0 right-0 bottom-0 backdrop-blur-sm z-50">
       <dialog open className="modal md:modal-middle">
         <div className="modal-box min-w-fit">
           <Header />

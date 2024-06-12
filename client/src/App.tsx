@@ -51,7 +51,7 @@ function App() {
   }
 
   return (
-    <main className="font-quicksand w-screen h-screen flex flex-col items-center p-4 gap-5">
+    <main className="font-quicksand w-screen h-screen flex flex-col items-center p-4 gap-5 no-scrollbar">
       <Auth open={roomCode === ""} roomJoinedCallback={setRoom} />
       <Header />
       <RoomCodeOverlay roomCode={roomCode} />
