@@ -71,59 +71,60 @@ const ControlsOverlay = ({
           <Header />
           <h2 className="font-semibold text-xl mt-6 mb-2">Rules</h2>
           <ul className="list-disc list-inside">
-            <li>Memchess is a two-player turn-based game</li>
+            <li>Memchess is a two-player turn-based game.</li>
             <li>
-              It consists of a game of Chess and a game of 8x8 Memory played
-              simultaneously
+              It combines a game of Chess with an 8x8 Memory game, played
+              simultaneously.
             </li>
             <li>
-              Each turn consists of a Chess move and a Memory move. The memory
-              move is optional, the turn ends after the chess move.
+              Each turn consists of a Chess move and an optional Memory move.
+              The turn ends after the Chess move.
             </li>
             <li>
-              Each piece on the board has a corresponding pair of cards on the
-              memory board, except for the king. They are destroyed when a piece
-              is captured, or changed when a piece is promoted.
+              Each Chess piece has a corresponding pair of cards on the Memory
+              board, except for the King. When a piece is captured, its
+              corresponding cards are removed. When a piece is promoted, its
+              corresponding cards change.
             </li>
             <li>
-              Matching a pair of cards on the memory board allows the player to
-              optionally pick a corresponding piece on the chess board and
-              remove it, given that it does not invalidate the chess rules.
+              Matching a pair of cards on the Memory board allows the player to
+              optionally remove the corresponding piece on the Chess board, as
+              long as it does not break Chess rules.
             </li>
             <li>
-              The memory board contains 4 wildcards, which can be matched with
+              The Memory board contains four wildcards. Wildcards can match with
               any card. Matching two wildcards allows the player to remove any
-              piece from the board(except the king).
+              piece from the board, except the King.
             </li>
           </ul>
-          <h2 className="font-semibold text-xl mt-6 mb-2">Winning the game</h2>
-          <p>The game ends when one of the following conditions are met:</p>
+          <h2 className="font-semibold text-xl mt-6 mb-2">Winning the Game</h2>
+          <p>The game ends when one of the following conditions is met:</p>
           <ul className="list-disc list-inside">
             <li>A checkmate occurs.</li>
-            <li>A stalemate occurs. This results in a draw</li>
+            <li>A stalemate occurs, resulting in a draw.</li>
             <li>
-              All pieces of one player, except the king, are eliminated. The
-              other player is decalred as the winner.
+              All pieces of one player, except the King, are eliminated. The
+              other player is declared the winner.
             </li>
             <li>
-              (Only in timed mode) One of the players runs out of time. In this
-              case, the other player is declared winner.
+              In timed mode, if a player runs out of time, the other player is
+              declared the winner.
             </li>
           </ul>
           <h2 className="font-semibold text-xl mt-6 mb-2">Tips</h2>
           <ul className="list-disc list-inside">
             <li>
               If you know the locations of a pair of cards of your color, you
-              can match them but not remove any piece to gain an advantage and
+              can match them without removing a piece to gain an advantage,
               essentially removing the cards for one of your pieces.
             </li>
             <li>
-              You can stratigically match cards to remove an opposing piece
+              Strategically match cards to remove an opposing piece that is
               pinning one of your pieces.
             </li>
             <li>
-              You can skip playing memory to let your opponent reveal the cards
-              for you, if it seems advantageous.
+              You can skip the Memory move to let your opponent reveal cards,
+              which might be advantageous for you.
             </li>
           </ul>
           <button
