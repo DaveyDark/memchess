@@ -31,13 +31,24 @@ export default {
   ],
   daisyui: {
     themes: [
+      "memchess_light",
+      "memchess_light",
       {
-        mytheme: {
+        memchess_light: {
           primary: "#51958f",
           secondary: "#263044",
           accent: "#92b8b3",
           neutral: "#53c2cf",
           "base-100": "#d0e9dd",
+          info: "#92b8b3",
+          success: "#51958f",
+        },
+        memchess_dark: {
+          primary: "#51958f",
+          "base-100": "#263044",
+          accent: "#92b8b3",
+          neutral: "#53c2cf",
+          secondary: "#435477",
           info: "#92b8b3",
           success: "#51958f",
         },

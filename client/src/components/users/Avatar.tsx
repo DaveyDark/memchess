@@ -17,7 +17,7 @@ const Avatar = ({ avatar, turn, connected }: AvatarProps) => {
       className={`w-16 h-16 rounded-lg border-2 border-primary ${avatar.color} relative`}
     >
       <input
-        className={`w-full h-full font-mono bg-transparent rounded-lg outline-none text-2xl 
+        className={`w-full h-full font-mono bg-transparent rounded-lg outline-none text-2xl text-black
           text-center ${RotationClasses[avatar.rotation]}`}
         disabled
         value={avatar.avatar}

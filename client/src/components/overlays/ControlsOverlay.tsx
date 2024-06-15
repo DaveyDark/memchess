@@ -1,7 +1,7 @@
-import { HelpCircle, RotateCw, Share } from "react-feather";
+import { HelpCircle, Moon, RotateCw, Share, Sun } from "react-feather";
 import { useSocket } from "../../context/SocketProvider";
 import { useGameState } from "../../context/GameStateProvider";
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import Header from "../Header";
 
 const ControlsOverlay = ({
@@ -27,9 +27,42 @@ const ControlsOverlay = ({
   };
 
   const [showHelp, setShowHelp] = useState(false);
+  const [darkMode, setDarkMode] = useState(
+    localStorage.getItem("darkmode") || "",
+  );
+
+  useEffect(() => {
+    localStorage.setItem("darkmode", darkMode);
+  }, [darkMode]);
 
   return (
     <div className="md:absolute right-5 md:top-5 flex gap-2">
+      <div
+        className="lg:tooltip lg:tooltip-bottom lg:tooltip-secondary"
+        data-tip="Toggle Theme"
+      >
+        <div
+          className="flex p-2 md:p-4 rounded-xl bg-primary
+            gap-2 cursor-pointer"
+        >
+          <label className="swap swap-rotate">
+            {/* this hidden checkbox controls the state */}
+            <input
+              type="checkbox"
+              className="theme-controller"
+              value="memchess_dark"
+              checked={darkMode ? true : false}
+              onChange={() => setDarkMode(darkMode ? "" : "on")}
+            />
+
+            {/* sun icon */}
+            <Sun className="swap-off" color="white" />
+
+            {/* moon icon */}
+            <Moon className="swap-on" color="white" />
+          </label>
+        </div>
+      </div>
       <div
         className="lg:tooltip lg:tooltip-bottom lg:tooltip-secondary"
         data-tip="How to Play"

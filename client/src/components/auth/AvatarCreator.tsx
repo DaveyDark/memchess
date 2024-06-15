@@ -51,7 +51,7 @@ const AvatarCreator = ({ avatar, avatarDispatch }: AvatarCreatorProps) => {
         className={`w-24 h-24 rounded-lg border border-primary ${avatar.color} relative`}
       >
         <input
-          className={`w-full h-full font-mono bg-transparent rounded-lg outline-none text-4xl 
+          className={`w-full h-full font-mono bg-transparent rounded-lg outline-none text-4xl  text-black
           text-center ${RotationClasses[avatar.rotation]}`}
           value={avatar.avatar}
           onChange={(e) =>
