@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use chess::{BoardBuilder, Piece, Square};
+use chess::{BoardBuilder, CastleRights, Color, Piece, Square};
 use socketioxide::extract::{Data, SocketRef, State};
 use tracing::error;
 
@@ -225,14 +225,52 @@ pub async fn on_clear_square(
     };
 
     let board_square = Square::from_str(&square).unwrap();
-    let piece = board
-        .piece_on(board_square)
-        .unwrap()
-        .to_string(board.color_on(board_square).unwrap());
+    let color = board.color_on(board_square).unwrap();
+    let piece = board.piece_on(board_square).unwrap();
+    let piece_str = piece.clone().to_string(color.clone());
 
     // Convert to BoardBuilder
     let mut builder = BoardBuilder::from(board);
 
+    // Check if piece was a rook
+    if Piece::Rook == piece {
+        // Cehck if rook is kingside or queenside
+        if color == Color::Black {
+            let mut castle_rights = builder.get_castle_rights(color);
+            if square == "a8" {
+                if castle_rights == CastleRights::Both {
+                    castle_rights = CastleRights::KingSide;
+                } else {
+                    castle_rights = CastleRights::NoRights;
+                }
+            } else if square == "h8" {
+                if castle_rights == CastleRights::Both {
+                    castle_rights = CastleRights::QueenSide;
+                } else {
+                    castle_rights = CastleRights::NoRights;
+                }
+            }
+            builder.castle_rights(color, castle_rights);
+        } else {
+            let mut castle_rights = builder.get_castle_rights(color);
+            if square == "a1" {
+                if castle_rights == CastleRights::Both {
+                    castle_rights = CastleRights::KingSide;
+                } else {
+                    castle_rights = CastleRights::NoRights;
+                }
+            } else if square == "h1" {
+                if castle_rights == CastleRights::Both {
+                    castle_rights = CastleRights::QueenSide;
+                } else {
+                    castle_rights = CastleRights::NoRights;
+                }
+            }
+            builder.castle_rights(color, castle_rights);
+        }
+    }
+
+    println!("{:?}", builder.get_castle_rights(color));
     // Remove corresponding piece from chess board
     builder.clear_square(board_square);
 
@@ -262,7 +300,7 @@ pub async fn on_clear_square(
 
     socket
         .within(room_id.clone())
-        .emit("square_cleared", (square, piece, socket.id.to_string()))
+        .emit("square_cleared", (square, piece_str, socket.id.to_string()))
         .unwrap_or_else(|e| error!("Failed to emit square_cleared event: {}", e));
 }
 
